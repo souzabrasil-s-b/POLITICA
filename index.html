@@ -1,0 +1,3221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Urna Simulada — Amazonas 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Barlow+Condensed:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #080c10;
+  --surface: #0e1520;
+  --surface2: #141f2e;
+  --border: #1e2d40;
+  --azul: #0a84ff;
+  --azul2: #005cc5;
+  --verde: #30d158;
+  --amarelo: #ffd60a;
+  --vermelho: #ff453a;
+  --branco: #e8edf2;
+  --texto: #5a7a9a;
+  --texto2: #8aaccc;
+  --urna-bg: #050810;
+  --header-bg: rgba(8,12,16,0.95);
+}
+
+/* ── TEMA AZUL CLARO ── */
+[data-tema="azul"] {
+  --bg: #e8f4ff;
+  --surface: #ffffff;
+  --surface2: #ddeeff;
+  --border: #a8d0f0;
+  --azul: #0066cc;
+  --azul2: #004a99;
+  --verde: #1a8a3c;
+  --amarelo: #c87800;
+  --vermelho: #cc2200;
+  --branco: #0a1a2e;
+  --texto: #4a6a8a;
+  --texto2: #2a4a6a;
+  --urna-bg: #d0e8ff;
+  --header-bg: rgba(232,244,255,0.97);
+}
+
+/* ── TEMA BRANCO ── */
+[data-tema="branco"] {
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --surface2: #eeeeee;
+  --border: #cccccc;
+  --azul: #1565c0;
+  --azul2: #0d47a1;
+  --verde: #2e7d32;
+  --amarelo: #e65100;
+  --vermelho: #c62828;
+  --branco: #111111;
+  --texto: #666666;
+  --texto2: #444444;
+  --urna-bg: #e8e8e8;
+  --header-bg: rgba(245,245,245,0.97);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--branco);
+  font-family: 'Barlow Condensed', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* FUNDO GRID */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(10,132,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,132,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+[data-tema="azul"] body::before,
+[data-tema="branco"] body::before {
+  background-image:
+    linear-gradient(rgba(0,100,200,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,100,200,0.05) 1px, transparent 1px);
+}
+
+/* SELETOR DE TEMA */
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 16px;
+}
+.theme-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--texto);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.theme-btn {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  position: relative;
+}
+.theme-btn:hover { transform: scale(1.2); }
+.theme-btn.active { border-color: var(--azul); }
+.theme-btn[data-t="escuro"]  { background: #080c10; border-color: #1e2d40; }
+.theme-btn[data-t="azul"]    { background: linear-gradient(135deg,#4db3ff,#0066cc); }
+.theme-btn[data-t="branco"]  { background: #f5f5f5; border-color: #ccc; }
+.theme-btn.active::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--azul);
+}
+
+/* HEADER */
+header {
+  position: sticky; top: 0; z-index: 300;
+  background: var(--header-bg);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hbadge {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #000;
+  background: var(--verde);
+  padding: 4px 10px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.htitle {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--branco);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.hstep {
+  margin-left: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--texto);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hstep span { color: var(--azul); }
+/* Botão admin no header */
+.btn-admin-topo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--texto2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.btn-admin-topo:hover {
+  border-color: var(--azul);
+  color: var(--azul);
+  box-shadow: 0 0 10px rgba(10,132,255,0.25);
+}
+.btn-admin-topo svg { width: 16px; height: 16px; fill: transparent; stroke: none; opacity: 0; }
+@media (max-width: 480px) {
+  .hbadge { display: none; }
+  .htitle { font-size: 11px; }
+}
+
+/* PROGRESS BAR */
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--azul2), var(--azul));
+  transition: width 0.5s ease;
+}
+
+/* PAGES */
+.page { display: none; position: relative; z-index: 1; }
+.page.active { display: block; }
+
+/* ========================
+   PÁGINA: BOAS-VINDAS
+======================== */
+.welcome-wrap {
+  min-height: calc(100vh - 59px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.urna-icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--surface2), var(--border));
+  border: 1px solid var(--azul);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 28px;
+  box-shadow: 0 0 40px rgba(10,132,255,0.2);
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 30px rgba(10,132,255,0.2); }
+  50%      { box-shadow: 0 0 60px rgba(10,132,255,0.4); }
+}
+
+.welcome-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--azul);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.welcome-h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(24px, 5vw, 48px);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--branco);
+  margin-bottom: 10px;
+}
+.welcome-sub {
+  font-size: 18px;
+  color: var(--texto2);
+  margin-bottom: 32px;
+  max-width: 480px;
+}
+
+.cargos-preview {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.cargo-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 8px 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--texto2);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cargo-chip .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--azul);
+}
+
+.btn-votar {
+  background: var(--azul);
+  color: #fff;
+  border: none;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 18px 48px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  z-index: 1;
+  display: block;
+  width: 100%;
+}
+.btn-votar::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.1);
+  transform: translateX(-100%);
+  transition: transform 0.3s;
+  pointer-events: none;
+}
+.btn-votar:hover { background: #1a94ff; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(10,132,255,0.4); }
+.btn-votar:hover::after { transform: translateX(100%); }
+
+.disclaimer {
+  margin-top: 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--texto);
+  letter-spacing: 0.5px;
+  max-width: 440px;
+  line-height: 1.7;
+}
+
+/* ========================
+   PÁGINA: VOTAÇÃO
+======================== */
+.vote-wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.cargo-header {
+  margin-bottom: 32px;
+}
+.cargo-step-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--azul);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.cargo-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(20px, 4vw, 32px);
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.cargo-desc {
+  font-size: 14px;
+  color: var(--texto2);
+  letter-spacing: 0.3px;
+}
+
+/* LISTA DE CANDIDATOS */
+.cand-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.cand-option {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cand-option::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.cand-option:hover {
+  border-color: rgba(10,132,255,0.5);
+  background: var(--surface2);
+}
+.cand-option:hover::before { background: var(--azul); }
+
+.cand-option.selected {
+  border-color: var(--azul);
+  background: rgba(10,132,255,0.08);
+}
+.cand-option.selected::before { background: var(--azul); }
+
+/* radio circle */
+.radio-circle {
+  width: 22px; height: 22px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cand-option:hover .radio-circle { border-color: var(--azul); }
+.cand-option.selected .radio-circle {
+  border-color: var(--azul);
+  background: var(--azul);
+}
+.radio-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.18s;
+}
+.cand-option.selected .radio-dot { opacity: 1; transform: scale(1); }
+
+.cand-info { flex: 1; }
+.cand-partido-sm {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--verde);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.cand-nome-sm {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--branco);
+  margin-bottom: 2px;
+}
+.cand-perfil {
+  font-size: 12px;
+  color: var(--texto2);
+}
+
+.cand-check {
+  width: 28px; height: 28px;
+  background: var(--azul);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.cand-option.selected .cand-check { opacity: 1; transform: scale(1); }
+
+/* NULO / BRANCO */
+.cand-option.nulo-branco { opacity: 0.6; }
+.cand-option.nulo-branco:hover { opacity: 1; }
+.cand-option.nulo-branco .cand-partido-sm { color: var(--texto); }
+
+/* BOTÕES NAV */
+.nav-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-nav {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--texto2);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 14px 28px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.btn-nav:hover { border-color: var(--azul); color: var(--branco); }
+.btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.btn-confirmar {
+  background: var(--verde);
+  border: none;
+  color: #000;
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 14px 32px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  flex: 1;
+  max-width: 300px;
+}
+.btn-confirmar:hover { background: #40e068; transform: translateY(-1px); }
+.btn-confirmar:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* AVISO SELECIONE */
+.aviso-selecione {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--amarelo);
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 10px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.aviso-selecione.show { opacity: 1; }
+
+/* DOTS CARGO */
+.cargo-dots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.cdot {
+  width: 32px; height: 4px;
+  background: var(--border);
+  transition: all 0.3s;
+}
+.cdot.done { background: var(--verde); }
+.cdot.current { background: var(--azul); }
+
+/* ========================
+   PÁGINA: CONFIRMAÇÃO
+======================== */
+.confirm-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 60px 24px;
+  text-align: center;
+}
+.confirm-icon {
+  width: 80px; height: 80px;
+  background: rgba(48,209,88,0.1);
+  border: 2px solid var(--verde);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 24px;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes popIn {
+  from { opacity:0; transform: scale(0.5); }
+  to   { opacity:1; transform: scale(1); }
+}
+.confirm-h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  color: var(--verde);
+}
+.confirm-sub { font-size: 16px; color: var(--texto2); margin-bottom: 36px; }
+
+.confirm-resumo {
+  text-align: left;
+  margin-bottom: 32px;
+}
+.resumo-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--azul);
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.resumo-cargo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--azul);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.resumo-nome { font-size: 16px; font-weight: 700; }
+.resumo-partido { font-size: 12px; color: var(--texto2); }
+.resumo-icon { font-size: 20px; }
+
+.btn-ver-painel {
+  background: var(--azul);
+  border: none;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 18px 40px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  width: 100%;
+  margin-bottom: 12px;
+}
+.btn-ver-painel:hover { background: #1a94ff; box-shadow: 0 8px 32px rgba(10,132,255,0.35); }
+
+.btn-ver-resultados {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--texto2);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 12px 32px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 12px;
+  display: block;
+}
+.btn-ver-resultados:hover { border-color: var(--azul); color: var(--branco); }
+
+.btn-votar-novo {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--texto2);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 14px 40px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  width: 100%;
+}
+.btn-votar-novo:hover { border-color: var(--azul); color: var(--branco); }
+
+/* ========================
+   CONFIRMAÇÃO — RESULTADOS
+======================== */
+.confirm-resultados {
+  margin-top: 32px;
+  text-align: left;
+}
+.cr-titulo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--verde);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.cr-cargo-bloco {
+  margin-bottom: 24px;
+}
+.cr-cargo-nome {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--azul);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.cr-cand-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 50px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cr-pos {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--texto2);
+  text-align: center;
+}
+.cr-pos.gold   { color: #ffd60a; }
+.cr-pos.silver { color: #adb5bd; }
+.cr-pos.bronze { color: #ac8e68; }
+.cr-info-bar { min-width: 0; }
+.cr-nome-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+  gap: 6px;
+}
+.cr-nome {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.cr-nome.cr-meu-voto {
+  color: var(--verde);
+}
+.cr-votos-txt {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--texto2);
+  white-space: nowrap;
+}
+.cr-track {
+  height: 5px;
+  background: var(--border);
+  overflow: hidden;
+}
+.cr-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 1s ease 0.3s;
+}
+.cr-pct {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--branco);
+  text-align: right;
+}
+[data-tema="azul"] .cr-pct,
+[data-tema="branco"] .cr-pct { color: var(--texto2); }
+[data-tema="azul"] .cr-nome,
+[data-tema="branco"] .cr-nome { color: var(--texto2); }
+
+/* ========================
+   PÁGINA: PAINEL
+======================== */
+.painel-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.painel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.painel-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(22px, 4vw, 36px);
+  font-weight: 900;
+  line-height: 1;
+}
+.painel-title span { color: var(--azul); }
+.painel-total {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--texto);
+  letter-spacing: 1.5px;
+  text-align: right;
+}
+.painel-total strong { color: var(--verde); font-size: 22px; display: block; }
+
+/* FILTRO CARGO */
+.cargo-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+.filter-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--texto2);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.filter-btn:hover { border-color: var(--azul); color: var(--branco); }
+.filter-btn.active { background: var(--azul); border-color: var(--azul); color: #fff; }
+
+/* GRID PAINEIS */
+.painel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.cargo-painel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 28px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.cp-titulo {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.cp-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--texto);
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+
+.cp-grafico-wrap {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 32px;
+  align-items: center;
+}
+
+.cp-barras { flex: 1; }
+
+.barra-item {
+  display: grid;
+  grid-template-columns: 160px 1fr 76px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.bi-info { min-width: 0; }
+.bi-centro { min-width: 0; }
+.bi-direita {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.bi-nome {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bi-partido-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: var(--texto);
+  display: block;
+  letter-spacing: 1px;
+}
+.bi-votos-abs {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--texto2);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.bi-track {
+  height: 8px;
+  background: var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.bi-fill {
+  height: 100%;
+  background: var(--azul);
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+  position: relative;
+}
+.bi-fill.lider { background: linear-gradient(90deg, var(--azul2), var(--azul)); }
+.bi-fill.nulo { background: var(--border); }
+
+.bi-pct {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--branco);
+  text-align: right;
+}
+/* garante leitura nos temas claros */
+[data-tema="azul"] .bi-pct,
+[data-tema="branco"] .bi-pct { color: var(--texto2); }
+[data-tema="azul"] .bi-nome,
+[data-tema="branco"] .bi-nome { color: var(--texto2); }
+[data-tema="azul"] .cp-titulo,
+[data-tema="branco"] .cp-titulo { color: var(--branco); }
+[data-tema="azul"] .rk-pct-label,
+[data-tema="branco"] .rk-pct-label { color: var(--texto2); }
+
+/* bi-votos substituído por bi-votos-abs */
+
+/* PIZZA */
+.cp-pizza canvas {
+  max-width: 220px !important;
+  max-height: 220px !important;
+}
+
+/* LIDER BADGE */
+.lider-badge {
+  background: rgba(10,132,255,0.12);
+  border: 1px solid rgba(10,132,255,0.3);
+  padding: 12px 16px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.lb-icon { font-size: 20px; }
+.lb-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--azul);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+.lb-nome { font-size: 16px; font-weight: 700; }
+.lb-pct {
+  margin-left: auto;
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--azul);
+}
+
+/* TOTALIZADOR */
+.totalizador {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--azul);
+  padding: 24px 28px;
+  margin-bottom: 32px;
+}
+.tot-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--azul);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.tot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+.tot-item { text-align: center; }
+.tot-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--verde);
+  line-height: 1;
+}
+.tot-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--texto);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* BTN VOLTAR */
+.btn-back {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--texto2);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  margin-bottom: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-back:hover { border-color: var(--azul); color: var(--branco); }
+
+/* ========================
+   RANKING GERAL
+======================== */
+.ranking-section {
+  margin-top: 48px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--verde);
+  padding: 28px;
+}
+.ranking-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--verde);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ranking-subtitle {
+  font-size: 13px;
+  color: var(--texto);
+  margin-bottom: 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.ranking-cargo-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--azul);
+  text-transform: uppercase;
+  margin: 24px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.ranking-cargo-label:first-of-type { margin-top: 0; }
+.ranking-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 120px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+[data-tema="azul"] .ranking-row,
+[data-tema="branco"] .ranking-row { border-bottom: 1px solid var(--border); }
+.rk-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+.rk-pct-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--azul);
+  line-height: 1;
+}
+[data-tema="azul"] .rk-pct-label,
+[data-tema="branco"] .rk-pct-label { color: var(--azul2); }
+.rk-votos-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--texto);
+  letter-spacing: 0.5px;
+}
+.rk-bar-mini {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.rk-bar-mini-fill {
+  height: 100%;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+@media (max-width: 480px) {
+  .ranking-row { grid-template-columns: 22px 1fr 90px; gap: 8px; }
+  .rk-pct-label { font-size: 14px; }
+  .rk-votos-label { font-size: 9px; }
+}
+[data-tema="azul"] .ranking-row,
+[data-tema="branco"] .ranking-row { border-bottom: 1px solid var(--border); }
+.ranking-row:last-child { border-bottom: none; }
+.rk-pos {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--texto);
+  text-align: center;
+}
+.rk-pos.gold   { color: #ffd60a; }
+.rk-pos.silver { color: #adb5bd; }
+.rk-pos.bronze { color: #ac8e68; }
+.rk-nome {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.rk-nome.nulo-style { color: var(--texto); font-weight: 400; font-style: italic; }
+.rk-partido {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--texto);
+  letter-spacing: 1.5px;
+  display: block;
+}
+/* rk-bar-wrap substituído por rk-bar-mini */
+/* rk-pct-label e rk-votos-label definidos acima */
+
+/* ANIMAÇÕES */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ========================
+   SEGURANÇA — AVISO JÁ VOTOU
+======================== */
+.ja-votou-banner {
+  display: none;
+  background: rgba(255,214,10,0.08);
+  border: 1px solid rgba(255,214,10,0.35);
+  border-left: 3px solid var(--amarelo);
+  padding: 14px 18px;
+  margin: 0 auto 20px;
+  max-width: 500px;
+  text-align: left;
+}
+.ja-votou-banner.show { display: block; }
+.jvb-titulo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--amarelo);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.jvb-texto { font-size: 13px; color: var(--texto2); line-height: 1.5; }
+
+/* ========================
+   MODAL ADMIN — REDESIGN
+======================== */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--bg);
+  width: 100%;
+  min-height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: fadeUp 0.25s ease both;
+}
+
+/* ── LOGIN ── */
+.admin-login-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 28px;
+}
+.admin-login-lockicon {
+  width: 64px; height: 64px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 32px rgba(10,132,255,0.12);
+}
+.admin-login-titulo {
+  font-family: 'Orbitron', monospace;
+  font-size: 17px; font-weight: 900;
+  letter-spacing: 2px; color: var(--branco);
+  text-align: center; margin-bottom: 6px;
+}
+.admin-login-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 2px;
+  color: var(--texto); text-transform: uppercase;
+  text-align: center; margin-bottom: 36px;
+}
+.admin-login-campo { width: 100%; max-width: 340px; }
+.modal-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--branco);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px; letter-spacing: 3px;
+  padding: 13px 16px; margin-bottom: 8px;
+  outline: none; border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modal-input:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(10,132,255,0.15); }
+.modal-erro {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--vermelho);
+  letter-spacing: 1px; margin-bottom: 14px; min-height: 16px;
+}
+.btn-login-entrar {
+  width: 100%; background: var(--azul); color: #fff; border: none;
+  font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; padding: 15px; cursor: pointer;
+  text-transform: uppercase; border-radius: 6px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  margin-top: 4px;
+}
+.btn-login-entrar:hover { background: #1a94ff; box-shadow: 0 6px 24px rgba(10,132,255,0.35); transform: translateY(-1px); }
+
+/* ── HEADER DO PAINEL ── */
+.admin-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.admin-header-icon {
+  width: 38px; height: 38px;
+  background: rgba(10,132,255,0.12);
+  border: 1px solid rgba(10,132,255,0.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.admin-header-info { flex: 1; min-width: 0; }
+.admin-titulo {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 1.5px; color: var(--branco);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.admin-subtitulo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px;
+  color: var(--texto); text-transform: uppercase; margin-top: 2px;
+}
+.admin-close {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--texto2); width: 34px; height: 34px;
+  border-radius: 8px; cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.admin-close:hover { border-color: var(--vermelho); color: var(--vermelho); }
+
+/* ── TABS ── */
+.admin-tabs {
+  display: flex; gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  overflow-x: auto;
+}
+.admin-tab {
+  background: none; border: none;
+  color: var(--texto2);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 1.5px;
+  padding: 14px 18px; cursor: pointer;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s; white-space: nowrap;
+}
+.admin-tab:hover { color: var(--branco); }
+.admin-tab.active { color: var(--azul); border-bottom-color: var(--azul); }
+
+/* ── CONTEÚDO DAS ABAS ── */
+.admin-content { display: none; padding: 28px 24px; flex: 1; }
+.admin-content.active { display: block; }
+
+.admin-section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px;
+  color: var(--texto); text-transform: uppercase;
+  margin-bottom: 20px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── CAMPOS ── */
+.admin-field { margin-bottom: 16px; }
+.admin-label {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px;
+  color: var(--texto2); text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.admin-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--branco);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; padding: 10px 14px;
+  outline: none; border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.admin-input:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(10,132,255,0.12); }
+
+.admin-btn-salvar {
+  background: var(--azul); color: #fff; border: none;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  padding: 13px 28px; cursor: pointer;
+  text-transform: uppercase; border-radius: 6px;
+  transition: all 0.2s; margin-top: 8px;
+}
+.admin-btn-salvar:hover { background: #1a94ff; transform: translateY(-1px); }
+
+.admin-feedback {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--verde);
+  letter-spacing: 1px; margin-top: 12px; min-height: 18px;
+}
+
+/* ── TEMAS ── */
+.admin-temas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; max-width: 360px;
+}
+.admin-tema-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 12px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  position: relative;
+}
+.admin-tema-btn:hover { border-color: var(--azul); }
+.admin-tema-btn.ativo { border-color: var(--azul); background: rgba(10,132,255,0.08); }
+.atb-preview {
+  width: 44px; height: 32px; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.escuro-preview { background: #080c10; border: 1px solid #1e2d40; }
+.azul-preview   { background: #e8f4ff; border: 1px solid #a8d0f0; }
+.branco-preview { background: #f5f5f5; border: 1px solid #ccc; }
+.atb-bar {
+  position: absolute; top: 7px; left: 6px; right: 6px;
+  height: 4px; border-radius: 2px; background: var(--azul);
+}
+.escuro-preview .atb-bar { background: #0a84ff; }
+.azul-preview .atb-bar   { background: #0066cc; }
+.branco-preview .atb-bar { background: #1565c0; }
+.atb-dot {
+  position: absolute; bottom: 6px; left: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.escuro-preview .atb-dot { background: #30d158; }
+.azul-preview .atb-dot   { background: #1a8a3c; }
+.branco-preview .atb-dot { background: #2e7d32; }
+.atb-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1px;
+  color: var(--texto2); text-transform: uppercase;
+}
+.atb-check {
+  font-size: 12px; color: var(--azul);
+  position: absolute; top: 6px; right: 8px;
+}
+
+/* ── AÇÕES ── */
+.admin-acao-item {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface);
+  margin-bottom: 10px; transition: border-color 0.2s;
+}
+.admin-acao-item:hover { border-color: rgba(10,132,255,0.3); }
+.admin-acao-info { flex: 1; min-width: 0; }
+.admin-acao-nome {
+  font-size: 14px; font-weight: 700;
+  color: var(--branco); margin-bottom: 3px;
+}
+.admin-acao-desc {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; color: var(--texto); letter-spacing: 0.5px;
+}
+.admin-btn-acao {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--texto2); font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; font-weight: 700;
+  padding: 9px 16px; cursor: pointer; text-transform: uppercase;
+  border-radius: 6px; white-space: nowrap; transition: all 0.2s;
+  flex-shrink: 0;
+}
+.admin-btn-acao:hover { border-color: var(--azul); color: var(--azul); }
+.admin-btn-acao.danger { border-color: rgba(255,69,58,0.4); color: var(--vermelho); }
+.admin-btn-acao.danger:hover { background: rgba(255,69,58,0.1); }
+.admin-btn-acao.warning { border-color: rgba(255,214,10,0.4); color: var(--amarelo); }
+.admin-btn-acao.warning:hover { background: rgba(255,214,10,0.08); }
+
+/* ── CRUD CARGOS/CANDIDATOS ── */
+.crud-cargo-list { display: flex; flex-direction: column; gap: 12px; }
+.crud-cargo-card {
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); overflow: hidden;
+}
+.crud-cargo-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; cursor: pointer;
+  background: var(--surface2); transition: background 0.2s;
+}
+.crud-cargo-header:hover { background: rgba(10,132,255,0.06); }
+.crud-cargo-titulo {
+  flex: 1; font-weight: 700; font-size: 14px; color: var(--branco);
+}
+.crud-cargo-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; color: var(--texto); letter-spacing: 1px;
+}
+.crud-cargo-chevron {
+  font-size: 12px; color: var(--texto);
+  transition: transform 0.25s;
+}
+.crud-cargo-card.open .crud-cargo-chevron { transform: rotate(90deg); }
+.crud-cargo-body {
+  display: none; padding: 18px;
+  border-top: 1px solid var(--border);
+}
+.crud-cargo-card.open .crud-cargo-body { display: block; }
+
+/* Editar metadados do cargo */
+.crud-cargo-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+@media(max-width:500px){ .crud-cargo-fields { grid-template-columns: 1fr; } }
+.crud-cargo-fields .full { grid-column: 1/-1; }
+
+/* Lista de candidatos dentro do cargo */
+.crud-cand-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.crud-cand-row {
+  display: grid; grid-template-columns: 1fr 100px 120px auto;
+  gap: 8px; align-items: center;
+  padding: 10px 12px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 6px;
+}
+@media(max-width:600px){ .crud-cand-row { grid-template-columns: 1fr auto; } }
+.crud-cand-nome { font-size: 13px; font-weight: 700; color: var(--branco); }
+.crud-cand-partido {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  color:var(--azul); letter-spacing:1px; text-transform:uppercase;
+}
+.crud-cand-perfil { font-size:11px; color:var(--texto2); margin-top:2px; }
+.crud-cand-tag-nulo {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  color:var(--texto); letter-spacing:1px; padding:2px 6px;
+  border:1px solid var(--border); border-radius:4px;
+}
+.crud-btn-mini {
+  background:none; border:1px solid var(--border); color:var(--texto2);
+  font-size:11px; padding:5px 10px; border-radius:5px;
+  cursor:pointer; transition:all 0.18s; white-space:nowrap;
+}
+.crud-btn-mini:hover { border-color:var(--azul); color:var(--azul); }
+.crud-btn-mini.del:hover { border-color:var(--vermelho); color:var(--vermelho); }
+.crud-btn-mini-group { display:flex; gap:5px; }
+
+/* Formulário de novo candidato */
+.crud-novo-cand {
+  margin-top:12px; padding:14px; background:rgba(10,132,255,0.04);
+  border:1px dashed rgba(10,132,255,0.3); border-radius:8px;
+}
+.crud-novo-cand-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px;
+  color:var(--azul); text-transform:uppercase; margin-bottom:10px;
+}
+.crud-novo-cand-fields {
+  display:grid; grid-template-columns:1fr 90px 1fr; gap:8px; margin-bottom:8px;
+}
+@media(max-width:560px){ .crud-novo-cand-fields { grid-template-columns:1fr; } }
+.crud-btn-add-cand {
+  background:var(--azul); border:none; color:#fff;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1.5px; font-weight:700;
+  padding:10px 20px; border-radius:6px;
+  cursor:pointer; text-transform:uppercase; transition:all 0.2s;
+}
+.crud-btn-add-cand:hover { background:#1a94ff; }
+
+.crud-divider {
+  display:flex; align-items:center; gap:10px;
+  margin: 10px 0 14px;
+}
+.crud-divider-line { flex:1; height:1px; background:var(--border); }
+.crud-divider-txt {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  color:var(--texto); letter-spacing:2px; text-transform:uppercase;
+}
+
+/* Botão novo cargo */
+.btn-novo-cargo {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; padding:16px;
+  background:none; border:1px dashed rgba(10,132,255,0.4);
+  color:var(--azul); border-radius:10px; cursor:pointer;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:2px; text-transform:uppercase;
+  transition:all 0.2s; margin-top:4px;
+}
+.btn-novo-cargo:hover { background:rgba(10,132,255,0.06); border-style:solid; }
+
+/* Salvar cargo */
+.crud-btn-salvar-cargo {
+  background:var(--verde); border:none; color:#000;
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; font-weight:700; padding:10px 20px;
+  border-radius:6px; cursor:pointer; text-transform:uppercase;
+  transition:all 0.2s; margin-right:8px;
+}
+.crud-btn-salvar-cargo:hover { filter:brightness(1.1); }
+.crud-btn-del-cargo {
+  background:none; border:1px solid rgba(255,69,58,0.4);
+  color:var(--vermelho); font-family:'IBM Plex Mono',monospace;
+  font-size:9px; letter-spacing:1.5px; font-weight:700;
+  padding:10px 18px; border-radius:6px; cursor:pointer;
+  text-transform:uppercase; transition:all 0.2s;
+}
+.crud-btn-del-cargo:hover { background:rgba(255,69,58,0.08); }
+
+/* Modal inline de edição de candidato */
+.edit-cand-modal {
+  position:fixed; inset:0; z-index:19999;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.edit-cand-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:28px; width:100%; max-width:440px;
+  animation:fadeUp 0.2s ease both;
+}
+.edit-cand-title {
+  font-family:'Orbitron',monospace; font-size:13px; font-weight:700;
+  letter-spacing:1px; color:var(--branco); margin-bottom:18px;
+}
+.edit-cand-btns { display:flex; gap:10px; margin-top:18px; }
+.edit-cand-cancel {
+  flex:1; background:none; border:1px solid var(--border);
+  color:var(--texto2); font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:1px; padding:12px;
+  border-radius:6px; cursor:pointer; text-transform:uppercase; transition:all 0.2s;
+}
+.edit-cand-cancel:hover { border-color:var(--azul); color:var(--branco); }
+.edit-cand-save {
+  flex:2; background:var(--azul); border:none; color:#fff;
+  font-family:'Orbitron',monospace; font-size:10px; font-weight:700;
+  letter-spacing:1.5px; padding:12px;
+  border-radius:6px; cursor:pointer; text-transform:uppercase; transition:all 0.2s;
+}
+.edit-cand-save:hover { background:#1a94ff; }
+
+/* PAINEL — barra de status Firebase */
+.painel-admin-bar {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.limite-info {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--texto); letter-spacing: 1px;
+}
+.limite-info span { color: var(--amarelo); }
+
+/* FAB ADMIN — canto inferior direito, invisível por padrão */
+.fab-admin {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  outline: none;
+}
+/* Aparece apenas após duplo clique desbloquear */
+.fab-admin.desbloqueado {
+  opacity: 1;
+  pointer-events: auto;
+  background: var(--vermelho);
+  box-shadow: 0 4px 20px rgba(255,69,58,0.4);
+}
+.fab-admin.desbloqueado:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(255,69,58,0.55);
+}
+.fab-admin svg { width: 22px; height: 22px; fill: #fff; }
+
+/* SEÇÃO INTEGRIDADE */
+.integridade-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--verde);
+  padding: 20px 24px;
+  margin-top: 32px;
+}
+.integ-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  color: var(--verde); text-transform: uppercase; margin-bottom: 14px;
+}
+.integ-hash-list {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 240px; overflow-y: auto;
+}
+.integ-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 90px 80px;
+  gap: 10px; align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; padding: 7px 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+}
+.integ-num { color: var(--texto); }
+.integ-hash { color: var(--azul); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.5px; }
+.integ-ts { color: var(--texto); font-size: 9px; }
+.integ-ok   { color: var(--verde); font-weight: 700; }
+.integ-fail { color: var(--vermelho); font-weight: 700; }
+.integ-summary {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--texto2); margin-top: 12px; letter-spacing: 0.5px;
+}
+.integ-summary strong { color: var(--branco); }
+.integ-summary .ok-count { color: var(--verde); }
+.integ-summary .fail-count { color: var(--vermelho); }
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .cp-grafico-wrap { grid-template-columns: 1fr; }
+  .cp-pizza { display: none; }
+  .barra-item { grid-template-columns: 120px 1fr 66px; gap: 8px; }
+  .bi-nome { font-size: 13px; }
+}
+@media (max-width: 480px) {
+  .barra-item { grid-template-columns: 100px 1fr 60px; gap: 6px; }
+  .bi-nome { font-size: 12px; }
+  .bi-pct { font-size: 13px; }
+  .bi-votos-abs { font-size: 9px; }
+}
+@media (max-width: 360px) {
+  .barra-item { grid-template-columns: 80px 1fr 56px; gap: 4px; }
+  .bi-nome { font-size: 11px; }
+}
+</style>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a84ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Urna AM 2026">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar" id="progressBar">
+  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <button class="btn-admin-topo" onclick="abrirModal()" title="Painel do Administrador">
+    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-8 9a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm5-9H9V6a3 3 0 0 1 6 0v2z"/></svg>
+  </button>
+  <div class="hbadge">Simulação</div>
+  <div class="htitle">Urna 2026 — AM</div>
+  <div class="hstep" id="stepLabel">Início</div>
+</header>
+
+<!-- ===================== PÁGINA: BOAS-VINDAS ===================== -->
+<div class="page active" id="page-welcome">
+  <div class="welcome-wrap">
+    <div class="urna-icon">🗳️</div>
+    <div class="welcome-label">// Pesquisa de campo simulada</div>
+    <h1 class="welcome-h1">URNA SIMULADA<br>AMAZONAS 2026</h1>
+    <p class="welcome-sub">Vote nos seus candidatos preferidos para cada cargo e veja o resultado em tempo real com todos os participantes.</p>
+
+    <div class="ja-votou-banner" id="jaVotouBanner">
+      <div class="jvb-titulo">⚠ Voto já registrado neste dispositivo</div>
+      <div class="jvb-texto">Você já votou nesta sessão. Para garantir a integridade da pesquisa, um novo voto não é permitido no mesmo dispositivo.</div>
+    </div>
+
+    <div class="cargos-preview">
+      <div class="cargo-chip"><span class="dot"></span>Governador do AM</div>
+      <div class="cargo-chip"><span class="dot"></span>Senado Federal (2 vagas)</div>
+      <div class="cargo-chip"><span class="dot"></span>Presidente do Brasil</div>
+    </div>
+    <button class="btn-votar" id="btnIniciarVotacao" onclick="startVoting()">▶ INICIAR VOTAÇÃO</button>
+    <button class="btn-ver-resultados" onclick="showPainel()">📊 VER RESULTADOS</button>
+    <button class="btn-instalar-app" id="btnInstalarApp" onclick="instalarApp()" style="display:none;margin-top:12px;background:none;border:1px solid var(--azul);color:var(--azul);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;padding:10px 24px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;align-items:center;gap:8px;">📲 INSTALAR COMO APP</button>
+    <p class="disclaimer">Esta é uma simulação de pesquisa de campo. Os votos são armazenados localmente no navegador. Cada dispositivo registra apenas um voto. Sem identificação pessoal.</p>
+  </div>
+</div>
+
+<!-- ===================== PÁGINA: VOTAÇÃO ===================== -->
+<div class="page" id="page-vote">
+  <div class="vote-wrap">
+    <div class="cargo-dots" id="cargoDots"></div>
+    <div class="cargo-header">
+      <div class="cargo-step-label" id="voteStepLabel"></div>
+      <div class="cargo-title" id="voteTitle"></div>
+      <div class="cargo-desc" id="voteDesc"></div>
+    </div>
+    <div class="cand-list" id="candList"></div>
+    <div class="aviso-selecione" id="avisoSelecione">⚠ SELECIONE UM CANDIDATO PARA CONTINUAR</div>
+    <div class="nav-btns">
+      <button class="btn-nav" id="btnAnterior" onclick="prevCargo()">← ANTERIOR</button>
+      <button class="btn-confirmar" id="btnProximo" onclick="nextCargo()">PRÓXIMO →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PÁGINA: CONFIRMAÇÃO ===================== -->
+<div class="page" id="page-confirm">
+  <div class="confirm-wrap">
+    <div class="confirm-icon">✓</div>
+    <h2 class="confirm-h2">VOTO REGISTRADO!</h2>
+    <p class="confirm-sub">Suas escolhas foram computadas com sucesso.</p>
+    <div class="confirm-resumo" id="confirmResumo"></div>
+    <div class="confirm-resultados" id="confirmResultados"></div>
+    <button class="btn-ver-painel" onclick="showPainel()">📊 VER PAINEL COMPLETO</button>
+    <button class="btn-votar-novo" onclick="resetVoting()">↩ NOVA VOTAÇÃO</button>
+  </div>
+</div>
+
+
+
+<!-- ===================== PAINEL ADMIN (tela cheia) ===================== -->
+<div class="modal-overlay" id="modalAdmin">
+  <div class="modal-box admin-painel">
+
+    <!-- ── TELA DE LOGIN ── -->
+    <div id="admin-login-screen">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--texto);text-transform:uppercase;">// Acesso Restrito</div>
+        <button onclick="fecharModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--texto2);width:30px;height:30px;border-radius:7px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--vermelho)';this.style.color='var(--vermelho)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--texto2)'">✕</button>
+      </div>
+      <div class="admin-login-wrap">
+        <div class="admin-login-lockicon">🔐</div>
+        <div class="admin-login-titulo">PAINEL DO ADMINISTRADOR</div>
+        <div class="admin-login-sub">Urna Simulada — Amazonas 2026</div>
+        <div class="admin-login-campo">
+          <input class="modal-input" type="password" id="adminSenhaInput" placeholder="Palavra-chave" maxlength="32"
+            onkeydown="if(event.key==='Enter')confirmarSenha()" oninput="document.getElementById('modalErro').textContent=''">
+          <div class="modal-erro" id="modalErro"></div>
+          <button class="btn-login-entrar" onclick="confirmarSenha()">ENTRAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAINEL APÓS LOGIN ── -->
+    <div id="admin-painel-screen" style="display:none;flex-direction:column;min-height:100%;">
+
+      <!-- Header -->
+      <div class="admin-header">
+        <div class="admin-header-icon">🔐</div>
+        <div class="admin-header-info">
+          <div class="admin-titulo">PAINEL DO ADMINISTRADOR</div>
+          <div class="admin-subtitulo">Urna Simulada — Amazonas 2026</div>
+        </div>
+        <button class="admin-close" onclick="fecharModal()">✕</button>
+      </div>
+
+      <!-- Abas -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="adminAba('temas',this)">🎨&nbsp; Temas</button>
+        <button class="admin-tab" onclick="adminAba('titulos',this)">✏️&nbsp; Títulos</button>
+        <button class="admin-tab" onclick="adminAba('cargos',this)">🗳️&nbsp; Cargos &amp; Candidatos</button>
+        <button class="admin-tab" onclick="adminAba('acoes',this)">⚙️&nbsp; Ações</button>
+      </div>
+
+      <!-- ABA: TEMAS -->
+      <div class="admin-content active" id="admin-aba-temas">
+        <div class="admin-section-label">Escolha o tema visual do app</div>
+        <div class="admin-temas-grid">
+          <button class="admin-tema-btn" data-t="escuro" onclick="adminSetTema('escuro',this)">
+            <div class="atb-preview escuro-preview"><div class="atb-bar"></div><div class="atb-dot"></div></div>
+            <div class="atb-label">Escuro</div>
+            <div class="atb-check" id="tema-check-escuro">✓</div>
+          </button>
+          <button class="admin-tema-btn" data-t="azul" onclick="adminSetTema('azul',this)">
+            <div class="atb-preview azul-preview"><div class="atb-bar"></div><div class="atb-dot"></div></div>
+            <div class="atb-label">Azul Claro</div>
+            <div class="atb-check" id="tema-check-azul"></div>
+          </button>
+          <button class="admin-tema-btn" data-t="branco" onclick="adminSetTema('branco',this)">
+            <div class="atb-preview branco-preview"><div class="atb-bar"></div><div class="atb-dot"></div></div>
+            <div class="atb-label">Branco</div>
+            <div class="atb-check" id="tema-check-branco"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- ABA: TÍTULOS -->
+      <div class="admin-content" id="admin-aba-titulos">
+        <div class="admin-section-label">Edite os textos exibidos no app</div>
+        <div class="admin-field">
+          <label class="admin-label">Título do app (header)</label>
+          <input class="admin-input" id="edit-htitle" type="text" maxlength="40" placeholder="Urna 2026 — AM">
+        </div>
+        <div class="admin-field">
+          <label class="admin-label">Badge do header</label>
+          <input class="admin-input" id="edit-hbadge" type="text" maxlength="20" placeholder="Simulação">
+        </div>
+        <div class="admin-field">
+          <label class="admin-label">Título principal (tela inicial)</label>
+          <input class="admin-input" id="edit-welcome-h1" type="text" maxlength="50" placeholder="URNA SIMULADA AMAZONAS 2026">
+        </div>
+        <div class="admin-field">
+          <label class="admin-label">Subtítulo (tela inicial)</label>
+          <input class="admin-input" id="edit-welcome-sub" type="text" maxlength="120" placeholder="Vote nos seus candidatos...">
+        </div>
+        <button class="admin-btn-salvar" onclick="salvarTitulos()">SALVAR TÍTULOS</button>
+        <div class="admin-feedback" id="titulo-feedback"></div>
+      </div>
+
+      <!-- ABA: CARGOS & CANDIDATOS -->
+      <div class="admin-content" id="admin-aba-cargos">
+        <div class="admin-section-label">Gerencie os cargos e candidatos da urna</div>
+        <div class="crud-cargo-list" id="crudCargoList"></div>
+        <button class="btn-novo-cargo" onclick="crudNovoCargo()">＋ Adicionar novo cargo</button>
+        <div class="admin-feedback" id="cargos-feedback" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- ABA: AÇÕES -->
+      <div class="admin-content" id="admin-aba-acoes">
+        <div class="admin-section-label">Ações administrativas</div>
+        <div class="admin-acao-item">
+          <div class="admin-acao-info">
+            <div class="admin-acao-nome">Zerar todos os votos</div>
+            <div class="admin-acao-desc">Remove permanentemente todos os votos do banco local e do Firebase.</div>
+          </div>
+          <button class="admin-btn-acao danger" onclick="adminZerarVotos()">ZERAR</button>
+        </div>
+        <div class="admin-acao-item">
+          <div class="admin-acao-info">
+            <div class="admin-acao-nome">Liberar novo voto neste dispositivo</div>
+            <div class="admin-acao-desc">Remove o bloqueio de "já votou" deste dispositivo.</div>
+          </div>
+          <button class="admin-btn-acao warning" onclick="adminLiberarVoto()">LIBERAR</button>
+        </div>
+        <div class="admin-acao-item">
+          <div class="admin-acao-info">
+            <div class="admin-acao-nome">Restaurar títulos padrão</div>
+            <div class="admin-acao-desc">Volta todos os textos editados para os valores originais.</div>
+          </div>
+          <button class="admin-btn-acao" onclick="restaurarTitulos()">RESTAURAR</button>
+        </div>
+        <div class="admin-acao-item">
+          <div class="admin-acao-info">
+            <div class="admin-acao-nome">Exportar votos (JSON)</div>
+            <div class="admin-acao-desc">Baixa todos os votos armazenados como arquivo .json.</div>
+          </div>
+          <button class="admin-btn-acao" onclick="exportarVotos()">EXPORTAR</button>
+        </div>
+        <div class="admin-feedback" id="acao-feedback"></div>
+      </div>
+
+    </div><!-- fim admin-painel-screen -->
+  </div>
+</div>
+
+<!-- ===================== PÁGINA: PAINEL ===================== -->
+<div class="page" id="page-painel">
+  <div class="painel-wrap">
+    <div class="painel-admin-bar">
+      <button class="btn-back" onclick="showPage('page-welcome')">← VOLTAR</button>
+      <div class="limite-info" id="firebaseStatus" style="display:none">🔴 LOCAL</div>
+    </div>
+
+    <div class="painel-header">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--azul);margin-bottom:8px;">// RESULTADOS EM TEMPO REAL</div>
+        <div class="painel-title">PAINEL DE<br><span>VOTOS</span></div>
+      </div>
+      <div class="painel-total">
+        <strong id="totalVotos">0</strong>
+        VOTOS COMPUTADOS
+      </div>
+    </div>
+
+    <div class="totalizador">
+      <div class="tot-title">// Resumo geral</div>
+      <div class="tot-grid" id="totGrid"></div>
+    </div>
+
+    <div class="cargo-filter" id="cargoFilter"></div>
+
+    <div class="painel-grid" id="painelGrid"></div>
+
+    <!-- RANKING GERAL DE CANDIDATOS -->
+    <div class="ranking-section" id="rankingSection">
+      <div class="ranking-title">// Ranking geral de candidatos</div>
+      <div class="ranking-subtitle">Porcentagem dos votos recebidos por cada candidato em cada cargo</div>
+      <div id="rankingContent"></div>
+    </div>
+
+    <!-- INTEGRIDADE SHA-256 -->
+    <div class="integridade-section" id="integridadeSection">
+      <div class="integ-title">// Integridade dos votos — SHA-256</div>
+      <div class="integ-hash-list" id="integHashList"></div>
+      <div class="integ-summary" id="integSummary"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  TEMAS
+// ============================================================
+function setTema(tema, btn) {
+  document.documentElement.setAttribute('data-tema', tema === 'escuro' ? '' : tema);
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  localStorage.setItem('urna_tema_2026', tema);
+  // Re-renderiza painel se visível (cores dos charts mudam)
+  if (document.getElementById('page-painel').classList.contains('active')) {
+    renderPainel();
+  }
+}
+
+// Carrega tema salvo
+(function() {
+  const t = localStorage.getItem('urna_tema_2026') || 'escuro';
+  if (t !== 'escuro') {
+    document.documentElement.setAttribute('data-tema', t);
+    const btn = document.querySelector(`.theme-btn[data-t="${t}"]`);
+    if (btn) {
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  }
+})();
+
+// ============================================================
+//  DADOS
+// ============================================================
+const CARGOS = [
+  {
+    id: 'governador',
+    titulo: 'GOVERNADOR DO AMAZONAS',
+    desc: 'Escolha o candidato ao Governo do Estado do Amazonas',
+    vagas: 1,
+    candidatos: [
+      { id:'gov3', nome:'Maria do Carmo Seffair', partido:'PL', perfil:'Empresária e reitora' },
+      { id:'gov1', nome:'David Almeida', partido:'Avante', perfil:'Prefeito de Manaus reeleito (2024)' },
+      { id:'gov2', nome:'Omar Aziz', partido:'PSD', perfil:'Senador e ex-governador do AM' },
+      { id:'branco_gov', nome:'Voto em Branco', partido:'—', perfil:'Nenhum dos candidatos', nulo: true },
+      { id:'nulo_gov', nome:'Voto Nulo', partido:'—', perfil:'Anular o voto', nulo: true },
+    ]
+  },
+  {
+    id: 'senado1',
+    titulo: 'SENADO FEDERAL — 1ª ESCOLHA',
+    desc: 'Você pode votar em 2 senadores. Esta é a sua primeira escolha.',
+    vagas: 2,
+    candidatos: [
+      { id:'sen4', nome:'Capitão Alberto Neto', partido:'PL', perfil:'Deputado federal' },
+      { id:'sen6', nome:'Marcelo Ramos', partido:'PT', perfil:'Ex-deputado federal' },
+      { id:'sen1', nome:'Wilson Lima', partido:'União Brasil', perfil:'Ex-governador do Amazonas' },
+      { id:'sen2', nome:'Eduardo Braga', partido:'MDB', perfil:'Senador em exercício (reeleição)' },
+      { id:'sen3', nome:'Plínio Valério', partido:'PSDB', perfil:'Senador em exercício (reeleição)' },
+      { id:'sen5', nome:'Marcos Rotta', partido:'Avante', perfil:'Ex-vice-prefeito de Manaus' },
+      { id:'sen7', nome:'Chris Melchior', partido:'PSB', perfil:'Advogada, defensora dos direitos das mulheres' },
+      { id:'sen8', nome:'Ismael Munduruku', partido:'Rede', perfil:'Liderança indígena e educador' },
+      { id:'sen9', nome:'Rodrigo Sá', partido:'PP', perfil:'Vereador e delegado da Polícia Civil' },
+      { id:'branco_s1', nome:'Voto em Branco', partido:'—', perfil:'Nenhum dos candidatos', nulo: true },
+      { id:'nulo_s1', nome:'Voto Nulo', partido:'—', perfil:'Anular o voto', nulo: true },
+    ]
+  },
+  {
+    id: 'senado2',
+    titulo: 'SENADO FEDERAL — 2ª ESCOLHA',
+    desc: 'Esta é sua segunda vaga para o Senado. Escolha um candidato diferente.',
+    vagas: 2,
+    isSegundaSenado: true,
+    candidatos: [
+      { id:'sen4', nome:'Capitão Alberto Neto', partido:'PL', perfil:'Deputado federal' },
+      { id:'sen6', nome:'Marcelo Ramos', partido:'PT', perfil:'Ex-deputado federal' },
+      { id:'sen1', nome:'Wilson Lima', partido:'União Brasil', perfil:'Ex-governador do Amazonas' },
+      { id:'sen2', nome:'Eduardo Braga', partido:'MDB', perfil:'Senador em exercício (reeleição)' },
+      { id:'sen3', nome:'Plínio Valério', partido:'PSDB', perfil:'Senador em exercício (reeleição)' },
+      { id:'sen5', nome:'Marcos Rotta', partido:'Avante', perfil:'Ex-vice-prefeito de Manaus' },
+      { id:'sen7', nome:'Chris Melchior', partido:'PSB', perfil:'Advogada, defensora dos direitos das mulheres' },
+      { id:'sen8', nome:'Ismael Munduruku', partido:'Rede', perfil:'Liderança indígena e educador' },
+      { id:'sen9', nome:'Rodrigo Sá', partido:'PP', perfil:'Vereador e delegado da Polícia Civil' },
+      { id:'branco_s2', nome:'Voto em Branco', partido:'—', perfil:'Nenhum dos candidatos', nulo: true },
+      { id:'nulo_s2', nome:'Voto Nulo', partido:'—', perfil:'Anular o voto', nulo: true },
+    ]
+  },
+  {
+    id: 'presidente',
+    titulo: 'PRESIDENTE DO BRASIL',
+    desc: 'Escolha o candidato à Presidência da República',
+    vagas: 1,
+    candidatos: [
+      { id:'pre6', nome:'Augusto Cury', partido:'Avante', perfil:'Psiquiatra e escritor' },
+      { id:'pre1', nome:'Lula (PT)', partido:'PT', perfil:'Presidente atual — busca 4º mandato' },
+      { id:'pre2', nome:'Flávio Bolsonaro', partido:'PL', perfil:'Senador pelo Rio de Janeiro' },
+      { id:'pre3', nome:'Ronaldo Caiado', partido:'PSD', perfil:'Governador de Goiás' },
+      { id:'pre4', nome:'Romeu Zema', partido:'Novo', perfil:'Ex-governador de Minas Gerais' },
+      { id:'pre5', nome:'Ciro Gomes', partido:'PSDB', perfil:'Veterano em disputas presidenciais' },
+      { id:'pre7', nome:'Cabo Daciolo', partido:'Mobiliza', perfil:'Ex-candidato presidencial' },
+      { id:'pre8', nome:'Aldo Rebelo', partido:'DC', perfil:'Ex-ministro e ex-presidente da Câmara' },
+      { id:'pre9', nome:'Renan Santos', partido:'Missão', perfil:'Fundador do MBL' },
+      { id:'pre10', nome:'Samara Martins', partido:'UP', perfil:'Representante de movimentos sociais' },
+      { id:'branco_pre', nome:'Voto em Branco', partido:'—', perfil:'Nenhum dos candidatos', nulo: true },
+      { id:'nulo_pre', nome:'Voto Nulo', partido:'—', perfil:'Anular o voto', nulo: true },
+    ]
+  }
+];
+
+// ============================================================
+//  CONFIGURAÇÃO DE SEGURANÇA
+// ============================================================
+// A palavra-chave de admin está definida no bloco ADMIN mais abaixo.
+// SHA-256 ainda é usado para assinar/verificar integridade dos votos.
+
+// ============================================================
+//  CONFIGURAÇÃO FIREBASE — preencha com seus dados
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJETO.firebaseapp.com",
+  databaseURL:       "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+  projectId:         "SEU_PROJETO",
+  storageBucket:     "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId:             "SEU_APP_ID"
+};
+// Defina true para usar Firebase, false para usar só localStorage
+const USE_FIREBASE = false;
+
+// ============================================================
+//  SHA-256 UTILITÁRIOS
+// ============================================================
+async function sha256(str) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+// Gera assinatura de um voto: SHA-256(JSON dos campos de voto + timestamp + salt fixo)
+const SALT = 'urna_am_2026_salt_v1';
+async function assinarVoto(votoObj) {
+  const payload = JSON.stringify({ ...votoObj }) + SALT;
+  return sha256(payload);
+}
+
+// Verifica assinatura de um voto salvo
+async function verificarVoto(votoSalvo) {
+  const { _hash, ...semHash } = votoSalvo;
+  if (!_hash) return false;
+  const esperado = await assinarVoto(semHash);
+  return esperado === _hash;
+}
+
+// ============================================================
+//  ESTADO
+// ============================================================
+let currentCargo = 0;
+let votos  = {};
+let charts = {};
+let fbApp  = null;
+let fbDB   = null;
+let fbRef  = null;
+let fbUnsubscribe = null;
+
+// ============================================================
+//  FIREBASE — inicialização lazy
+// ============================================================
+async function initFirebase() {
+  if (fbDB || !USE_FIREBASE) return;
+  try {
+    const { initializeApp }  = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getDatabase, ref, push, onValue, remove } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    fbApp = initializeApp(FIREBASE_CONFIG);
+    fbDB  = getDatabase(fbApp);
+    fbRef = ref(fbDB, 'urna_am_2026/votos');
+    window._fbOps = { ref, push, onValue, remove, fbDB, fbRef };
+    console.log('[Firebase] conectado ✓');
+  } catch(e) {
+    console.warn('[Firebase] falha ao conectar, usando localStorage:', e.message);
+    fbDB = null;
+  }
+}
+
+// Salva voto: Firebase se disponível, senão localStorage
+async function salvarVoto(votoFinal) {
+  // Sempre salva local também (backup)
+  const db = getLocalDB();
+  db.votos.push(votoFinal);
+  saveLocalDB(db);
+
+  if (USE_FIREBASE && fbDB) {
+    try {
+      await window._fbOps.push(fbRef, votoFinal);
+      console.log('[Firebase] voto enviado ✓');
+    } catch(e) {
+      console.warn('[Firebase] erro ao salvar, mantido em localStorage:', e.message);
+    }
+  }
+}
+
+// Lê votos: Firebase se disponível, senão localStorage
+function getDB() {
+  if (USE_FIREBASE && fbDB && window._fbCache) return window._fbCache;
+  return getLocalDB();
+}
+
+function getLocalDB() {
+  try { return JSON.parse(localStorage.getItem('urna_am_2026') || '{"votos":[]}'); }
+  catch { return { votos: [] }; }
+}
+function saveLocalDB(db) {
+  localStorage.setItem('urna_am_2026', JSON.stringify(db));
+}
+
+// Escuta votos em tempo real do Firebase e atualiza o painel
+function escutarFirebase() {
+  if (!USE_FIREBASE || !fbDB || !window._fbOps) return;
+  const { onValue } = window._fbOps;
+  if (fbUnsubscribe) fbUnsubscribe();
+  fbUnsubscribe = onValue(fbRef, (snapshot) => {
+    const raw = snapshot.val() || {};
+    const votos = Object.values(raw);
+    window._fbCache = { votos };
+    if (document.getElementById('page-painel').classList.contains('active')) {
+      renderPainel();
+    }
+    document.getElementById('totalVotos').textContent = votos.length;
+  });
+}
+
+// Zera votos no Firebase + localStorage
+async function zerarTodosVotos() {
+  // Limpa localStorage
+  localStorage.removeItem('urna_am_2026');
+  localStorage.removeItem('urna_am_2026_votou');
+  window._fbCache = null;
+
+  if (USE_FIREBASE && fbDB && window._fbOps) {
+    try {
+      await window._fbOps.remove(fbRef);
+      console.log('[Firebase] votos zerados ✓');
+    } catch(e) {
+      console.warn('[Firebase] erro ao zerar:', e.message);
+    }
+  }
+}
+
+// Verifica se este dispositivo já votou
+function jaVotou() {
+  return !!localStorage.getItem('urna_am_2026_votou');
+}
+function marcarVotou() {
+  localStorage.setItem('urna_am_2026_votou', '1');
+}
+
+// ============================================================
+//  INICIALIZAÇÃO DA WELCOME PAGE
+// ============================================================
+function initWelcome() {
+  if (USE_FIREBASE) initFirebase().then(escutarFirebase);
+
+  if (jaVotou()) {
+    document.getElementById('jaVotouBanner').classList.add('show');
+    const btn = document.getElementById('btnIniciarVotacao');
+    btn.disabled    = true;
+    btn.textContent = '✓ VOTO JÁ REGISTRADO';
+    btn.style.opacity = '0.45';
+    btn.style.cursor  = 'not-allowed';
+  }
+}
+initWelcome();
+
+// ============================================================
+//  NAVEGAÇÃO
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function updateProgress() {
+  const total = CARGOS.length + 2; // + welcome + confirm
+  const step = currentCargo + 1;
+  const pct = Math.round((step / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stepLabel').innerHTML =
+    `Etapa <span>${step}</span> de ${CARGOS.length}`;
+}
+
+// ============================================================
+//  INÍCIO
+// ============================================================
+function startVoting() {
+  if (jaVotou()) {
+    document.getElementById('jaVotouBanner').classList.add('show');
+    return;
+  }
+  currentCargo = 0;
+  votos = {};
+  document.getElementById('progressFill').style.width = '5%';
+  renderCargo();
+  showPage('page-vote');
+}
+
+// ============================================================
+//  RENDER CARGO
+// ============================================================
+function renderCargo() {
+  const cargo = CARGOS[currentCargo];
+  updateProgress();
+
+  // dots
+  const dotsEl = document.getElementById('cargoDots');
+  dotsEl.innerHTML = CARGOS.map((c, i) => {
+    let cls = 'cdot';
+    if (i < currentCargo) cls += ' done';
+    if (i === currentCargo) cls += ' current';
+    return `<div class="${cls}" title="${c.titulo}"></div>`;
+  }).join('');
+
+  document.getElementById('voteStepLabel').textContent =
+    `Etapa ${currentCargo+1} de ${CARGOS.length}`;
+  document.getElementById('voteTitle').textContent = cargo.titulo;
+  document.getElementById('voteDesc').textContent = cargo.desc;
+
+  // candidatos
+  const list = document.getElementById('candList');
+  list.innerHTML = '';
+
+  // Filtra candidatos já selecionados na 1ª escolha do senado
+  let cands = cargo.candidatos;
+  if (cargo.isSegundaSenado && votos['senado1']) {
+    cands = cands.map(c => ({
+      ...c,
+      disabled: c.id === votos['senado1']
+    }));
+  }
+
+  cands.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'cand-option' + (c.nulo ? ' nulo-branco' : '') +
+      (votos[cargo.id] === c.id ? ' selected' : '') +
+      (c.disabled ? ' nulo-branco' : '');
+    div.style.animationDelay = (i * 0.04) + 's';
+    div.style.animation = `fadeUp 0.35s ease ${i*0.04}s both`;
+
+    if (!c.disabled) {
+      div.onclick = () => selectCandidate(cargo.id, c.id, div);
+    } else {
+      div.style.opacity = '0.3';
+      div.style.cursor = 'not-allowed';
+      div.title = 'Você já votou neste candidato na 1ª escolha';
+    }
+
+    div.innerHTML = `
+      <div class="radio-circle"><div class="radio-dot"></div></div>
+      <div class="cand-info">
+        <div class="cand-partido-sm">${c.partido}</div>
+        <div class="cand-nome-sm">${c.nome}</div>
+        <div class="cand-perfil">${c.perfil}</div>
+      </div>
+      <div class="cand-check">✓</div>
+    `;
+    list.appendChild(div);
+  });
+
+  // botões
+  document.getElementById('btnAnterior').disabled = currentCargo === 0;
+  const isLast = currentCargo === CARGOS.length - 1;
+  const btnP = document.getElementById('btnProximo');
+  btnP.textContent = isLast ? '✓ CONFIRMAR VOTO' : 'PRÓXIMO →';
+  btnP.style.background = isLast ? 'var(--verde)' : 'var(--azul)';
+  btnP.style.color = isLast ? '#000' : '#fff';
+  document.getElementById('avisoSelecione').classList.remove('show');
+}
+
+function selectCandidate(cargoId, candId, el) {
+  votos[cargoId] = candId;
+  document.querySelectorAll('.cand-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('avisoSelecione').classList.remove('show');
+}
+
+function nextCargo() {
+  const cargo = CARGOS[currentCargo];
+  if (!votos[cargo.id]) {
+    document.getElementById('avisoSelecione').classList.add('show');
+    return;
+  }
+  if (currentCargo < CARGOS.length - 1) {
+    currentCargo++;
+    renderCargo();
+    window.scrollTo(0,0);
+  } else {
+    confirmVote();
+  }
+}
+
+function prevCargo() {
+  if (currentCargo > 0) {
+    currentCargo--;
+    renderCargo();
+    window.scrollTo(0,0);
+  }
+}
+
+// ============================================================
+//  CONFIRMAR VOTO — com SHA-256 + Firebase
+// ============================================================
+async function confirmVote() {
+  // Monta payload base
+  const votoBase = { ...votos, ts: Date.now() };
+
+  // Gera hash SHA-256 do voto
+  const hash = await assinarVoto(votoBase);
+  const votoFinal = { ...votoBase, _hash: hash };
+
+  // Persiste (Firebase + localStorage)
+  await salvarVoto(votoFinal);
+
+  // Marca que este dispositivo votou
+  marcarVotou();
+
+  // Resumo visual
+  const resumo = document.getElementById('confirmResumo');
+  resumo.innerHTML = '';
+  CARGOS.forEach(cargo => {
+    const cid  = votos[cargo.id];
+    const cand = cargo.candidatos.find(c => c.id === cid);
+    const div  = document.createElement('div');
+    div.className = 'resumo-item';
+    div.innerHTML = `
+      <div>
+        <div class="resumo-cargo">${cargo.titulo}</div>
+        <div class="resumo-nome">${cand ? cand.nome : '—'}</div>
+        <div class="resumo-partido">${cand ? cand.partido : ''}</div>
+      </div>
+      <div class="resumo-icon">${cand && cand.nulo ? '⬜' : '✅'}</div>
+    `;
+    resumo.appendChild(div);
+  });
+
+  // Exibe hash do voto registrado
+  const hashDiv = document.createElement('div');
+  hashDiv.style.cssText = 'font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--verde);letter-spacing:0.5px;margin-top:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--verde);word-break:break-all;';
+  hashDiv.innerHTML = `<span style="color:var(--texto);display:block;margin-bottom:4px;letter-spacing:2px;">SHA-256 DO SEU VOTO</span>${hash}`;
+  resumo.appendChild(hashDiv);
+
+  document.getElementById('progressFill').style.width = '100%';
+  showPage('page-confirm');
+  renderConfirmResultados(votos);
+}
+
+function renderConfirmResultados(meusVotos) {
+  const CORES = ['#0a84ff','#30d158','#ffd60a','#ff9f0a','#ff453a','#bf5af2','#32ade6','#ac8e68'];
+  const db = getDB();
+  const allVotos = db.votos;
+  const total = allVotos.length;
+
+  const el = document.getElementById('confirmResultados');
+  el.innerHTML = '';
+
+  if (total === 0) return;
+
+  const titulo = document.createElement('div');
+  titulo.className = 'cr-titulo';
+  titulo.textContent = '// Resultados parciais — ' + total + ' voto' + (total !== 1 ? 's' : '') + ' computado' + (total !== 1 ? 's' : '');
+  el.appendChild(titulo);
+
+  CARGOS.forEach(cargo => {
+    // Conta votos
+    const contagem = {};
+    cargo.candidatos.forEach(c => contagem[c.id] = 0);
+    allVotos.forEach(v => {
+      if (v[cargo.id] && contagem[v[cargo.id]] !== undefined) contagem[v[cargo.id]]++;
+    });
+
+    // Ordena: não-nulos por votos desc, nulos ao final
+    const nonNulo = cargo.candidatos.filter(c => !c.nulo).sort((a,b) => contagem[b.id] - contagem[a.id]);
+    const nulos   = cargo.candidatos.filter(c =>  c.nulo).sort((a,b) => contagem[b.id] - contagem[a.id]);
+    const sorted  = [...nonNulo, ...nulos];
+
+    const bloco = document.createElement('div');
+    bloco.className = 'cr-cargo-bloco';
+
+    const cargoNome = document.createElement('div');
+    cargoNome.className = 'cr-cargo-nome';
+    cargoNome.textContent = cargo.titulo;
+    bloco.appendChild(cargoNome);
+
+    sorted.forEach((c, i) => {
+      const v   = contagem[c.id];
+      const pct = total > 0 ? (v / total * 100).toFixed(1) : '0.0';
+      const isMeuVoto = meusVotos[cargo.id] === c.id;
+      const posClass = i === 0 && !c.nulo && v > 0 ? 'gold' : i === 1 && !c.nulo ? 'silver' : i === 2 && !c.nulo ? 'bronze' : '';
+      const cor = c.nulo ? 'var(--border)' : (CORES[nonNulo.findIndex(x=>x.id===c.id)] || '#636366');
+
+      const row = document.createElement('div');
+      row.className = 'cr-cand-row';
+
+      const posEl = document.createElement('div');
+      posEl.className = 'cr-pos' + (posClass ? ' ' + posClass : '');
+      posEl.textContent = c.nulo ? '—' : String(i + 1);
+
+      const infoEl = document.createElement('div');
+      infoEl.className = 'cr-info-bar';
+
+      const nomeLinha = document.createElement('div');
+      nomeLinha.className = 'cr-nome-linha';
+
+      const nomeEl = document.createElement('span');
+      nomeEl.className = 'cr-nome' + (isMeuVoto ? ' cr-meu-voto' : '');
+      nomeEl.textContent = (isMeuVoto ? '★ ' : '') + c.nome + (isMeuVoto ? ' ← seu voto' : '');
+
+      const votosEl = document.createElement('span');
+      votosEl.className = 'cr-votos-txt';
+      votosEl.textContent = v + ' voto' + (v !== 1 ? 's' : '');
+
+      nomeLinha.appendChild(nomeEl);
+      nomeLinha.appendChild(votosEl);
+
+      const trackEl = document.createElement('div');
+      trackEl.className = 'cr-track';
+      const fillEl = document.createElement('div');
+      fillEl.className = 'cr-fill';
+      fillEl.dataset.pct = pct;
+      fillEl.style.background = cor;
+      trackEl.appendChild(fillEl);
+
+      infoEl.appendChild(nomeLinha);
+      infoEl.appendChild(trackEl);
+
+      const pctEl = document.createElement('div');
+      pctEl.className = 'cr-pct';
+      pctEl.textContent = pct + '%';
+
+      row.appendChild(posEl);
+      row.appendChild(infoEl);
+      row.appendChild(pctEl);
+      bloco.appendChild(row);
+    });
+
+    el.appendChild(bloco);
+  });
+
+  // Anima barras
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('.cr-fill[data-pct]').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  }));
+}
+
+function resetVoting() {
+  // Não permite nova votação se já votou
+  if (jaVotou()) {
+    showPage('page-welcome');
+    return;
+  }
+  votos = {};
+  startVoting();
+}
+
+// ============================================================
+//  PAINEL
+// ============================================================
+function showPainel() {
+  showPage('page-painel');
+  renderPainel();
+}
+
+function renderPainel() {
+  if (USE_FIREBASE && !fbDB) initFirebase().then(() => { escutarFirebase(); renderPainel(); });
+
+  const db = getDB();
+  const allVotos = db.votos;
+  const total = allVotos.length;
+
+  document.getElementById('totalVotos').textContent = total;
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('stepLabel').innerHTML = `<span>${total}</span> votos`;
+
+  // Indicador Firebase vs local
+  const fbStatus = document.getElementById('firebaseStatus');
+  if (fbStatus) {
+    fbStatus.style.display = 'block';
+    if (USE_FIREBASE && fbDB) {
+      fbStatus.innerHTML = '🟢 FIREBASE';
+      fbStatus.style.color = 'var(--verde)';
+    } else {
+      fbStatus.innerHTML = USE_FIREBASE ? '🟡 FIREBASE (offline)' : '💾 LOCAL';
+      fbStatus.style.color = USE_FIREBASE ? 'var(--amarelo)' : 'var(--texto)';
+    }
+  }
+
+  // Totalizador
+  const totGrid = document.getElementById('totGrid');
+  totGrid.innerHTML = `
+    <div class="tot-item">
+      <div class="tot-num">${total}</div>
+      <div class="tot-label">Total de votos</div>
+    </div>
+    <div class="tot-item">
+      <div class="tot-num" style="color:var(--azul)">${CARGOS.length}</div>
+      <div class="tot-label">Cargos disputados</div>
+    </div>
+    <div class="tot-item">
+      <div class="tot-num" style="color:var(--amarelo)">${CARGOS.reduce((a,c) => a + c.candidatos.filter(x=>!x.nulo).length, 0)}</div>
+      <div class="tot-label">Candidatos</div>
+    </div>
+    <div class="tot-item">
+      <div class="tot-num" style="color:var(--vermelho)">${Math.round(allVotos.filter(v=>Object.values(v).some(id=>id&&id.startsWith('nulo'))).length / Math.max(total,1) * 100)}%</div>
+      <div class="tot-label">Taxa de nulos</div>
+    </div>
+  `;
+
+  // Filtro
+  const cargoFilter = document.getElementById('cargoFilter');
+  cargoFilter.innerHTML = `<button class="filter-btn active" onclick="filterCargo('all',this)">TODOS</button>` +
+    CARGOS.map(c => `<button class="filter-btn" onclick="filterCargo('${c.id}',this)">${c.titulo.split('—')[0].trim()}</button>`).join('');
+
+  // Destroi charts anteriores
+  Object.values(charts).forEach(ch => ch.destroy());
+  charts = {};
+
+  // Paineis
+  const grid = document.getElementById('painelGrid');
+  grid.innerHTML = '';
+
+  CARGOS.forEach((cargo, ci) => {
+    // Conta votos
+    const contagem = {};
+    cargo.candidatos.forEach(c => contagem[c.id] = 0);
+    allVotos.forEach(v => {
+      if (v[cargo.id] && contagem[v[cargo.id]] !== undefined) {
+        contagem[v[cargo.id]]++;
+      }
+    });
+
+    const sorted = [...cargo.candidatos].sort((a,b) => contagem[b.id] - contagem[a.id]);
+    const lider = sorted.find(c => !c.nulo) || sorted[0];
+    const liderVotos = lider ? (contagem[lider.id] || 0) : 0;
+    const liderPct = total > 0 ? Math.round(liderVotos / total * 100) : 0;
+
+    // Cores pizza
+    const CORES = ['#0a84ff','#30d158','#ffd60a','#ff9f0a','#ff453a','#bf5af2','#32ade6','#ac8e68','#636366','#1c1c1e','#3a3a3c','#2c2c2e'];
+
+    const box = document.createElement('div');
+    box.className = 'cargo-painel';
+    box.dataset.cargo = cargo.id;
+    box.style.animationDelay = (ci * 0.1) + 's';
+
+    const pizzaId = 'pizza_' + cargo.id;
+    const nonNulo = sorted.filter(c => !c.nulo);
+    const nulos = sorted.filter(c => c.nulo);
+    const totalNulos = nulos.reduce((a,c) => a + contagem[c.id], 0);
+
+    box.innerHTML = `
+      <div class="cp-titulo">${cargo.titulo}</div>
+      <div class="cp-sub">// ${total} votos computados · ${cargo.vagas} vaga${cargo.vagas > 1 ? 's' : ''}</div>
+      <div class="cp-grafico-wrap">
+        <div class="cp-barras" id="barras_${cargo.id}"></div>
+        <div class="cp-pizza"><canvas id="${pizzaId}"></canvas></div>
+      </div>
+      ${liderVotos > 0 ? `
+      <div class="lider-badge">
+        <div class="lb-icon">🏆</div>
+        <div>
+          <span class="lb-label">Líder parcial</span>
+          <div class="lb-nome">${lider.nome}</div>
+        </div>
+        <div class="lb-pct">${liderPct}%</div>
+      </div>` : ''}
+    `;
+    grid.appendChild(box);
+
+    // Barras — renderiza imediatamente com largura final (sem animação quebrada)
+    const barrasEl = document.getElementById('barras_' + cargo.id);
+    const allCands = [...nonNulo, ...nulos];
+    allCands.forEach((c, i) => {
+      const v = contagem[c.id];
+      const pct = total > 0 ? (v / total * 100).toFixed(1) : '0';
+      const isLider = c.id === lider.id && !c.nulo;
+      const cor = c.nulo ? 'var(--border)' : (CORES[i] || '#0a84ff');
+      const div = document.createElement('div');
+      div.className = 'barra-item';
+      div.innerHTML = `
+        <div class="bi-info">
+          <div class="bi-nome">${c.nome}</div>
+          <span class="bi-partido-tag">${c.partido}</span>
+        </div>
+        <div class="bi-centro">
+          <div class="bi-track">
+            <div class="bi-fill${isLider ? ' lider' : c.nulo ? ' nulo' : ''}"
+              style="background:${cor}; width:0%; transition: width 1s ease 0.1s;"
+              data-w="${pct}"></div>
+          </div>
+        </div>
+        <div class="bi-direita">
+          <div class="bi-pct">${pct}%</div>
+          <div class="bi-votos-abs">${v} voto${v !== 1 ? 's' : ''}</div>
+        </div>
+      `;
+      barrasEl.appendChild(div);
+    });
+
+    // Pizza
+    const pizzaLabels = nonNulo.map(c => c.nome.split(' ')[0]);
+    if (totalNulos > 0) pizzaLabels.push('Nulos/Brancos');
+    const pizzaData = nonNulo.map(c => contagem[c.id]);
+    if (totalNulos > 0) pizzaData.push(totalNulos);
+
+    const ctx = document.getElementById(pizzaId);
+    if (ctx) {
+      charts[pizzaId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: pizzaLabels,
+          datasets: [{
+            data: pizzaData,
+            backgroundColor: [...nonNulo.map((_,i) => CORES[i]+'cc'), '#3a3a3ccc'],
+            borderColor: [...nonNulo.map((_,i) => CORES[i]), '#636366'],
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#141f2e',
+              borderColor: '#0a84ff',
+              borderWidth: 1,
+              bodyColor: '#e8edf2',
+              titleColor: '#0a84ff',
+              titleFont: { family: 'IBM Plex Mono', size: 10 },
+              callbacks: {
+                label: ctx => ` ${ctx.parsed} votos (${total>0?Math.round(ctx.parsed/total*100):0}%)`
+              }
+            }
+          },
+          cutout: '65%',
+        }
+      });
+    }
+  });
+
+  // Anima todas as barras de uma vez após o DOM estar pronto
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.bi-fill[data-w]').forEach(b => {
+        b.style.width = b.dataset.w + '%';
+      });
+    });
+  });
+
+  // Renderiza ranking geral
+  renderRanking(allVotos, total);
+
+  // Verifica integridade SHA-256 de todos os votos
+  renderIntegridade(allVotos);
+}
+
+// ============================================================
+//  RANKING GERAL
+// ============================================================
+function renderRanking(allVotos, total) {
+  const CORES = ['#0a84ff','#30d158','#ffd60a','#ff9f0a','#ff453a','#bf5af2','#32ade6','#ac8e68','#636366','#1c1c1e','#3a3a3c','#2c2c2e'];
+  const content = document.getElementById('rankingContent');
+  content.innerHTML = '';
+
+  CARGOS.forEach(cargo => {
+    const label = document.createElement('div');
+    label.className = 'ranking-cargo-label';
+    label.textContent = cargo.titulo;
+    content.appendChild(label);
+
+    // Conta votos por candidato
+    const contagem = {};
+    cargo.candidatos.forEach(c => contagem[c.id] = 0);
+    allVotos.forEach(v => {
+      if (v[cargo.id] && contagem[v[cargo.id]] !== undefined) {
+        contagem[v[cargo.id]]++;
+      }
+    });
+
+    // Ordena: não-nulos primeiro (por votos desc), depois nulos
+    const nonNulo = cargo.candidatos.filter(c => !c.nulo).sort((a,b) => contagem[b.id] - contagem[a.id]);
+    const nulos   = cargo.candidatos.filter(c =>  c.nulo).sort((a,b) => contagem[b.id] - contagem[a.id]);
+    const sorted  = [...nonNulo, ...nulos];
+
+    sorted.forEach((c, i) => {
+      const v   = contagem[c.id];
+      const pct = total > 0 ? (v / total * 100).toFixed(1) : '0.0';
+      const posClass = i === 0 && !c.nulo && v > 0 ? 'gold' : i === 1 && !c.nulo ? 'silver' : i === 2 && !c.nulo ? 'bronze' : '';
+      const cor = c.nulo ? 'var(--border)' : (CORES[nonNulo.findIndex(x=>x.id===c.id)] || '#636366');
+
+      const row = document.createElement('div');
+      row.className = 'ranking-row';
+      row.innerHTML = `
+        <div class="rk-pos ${posClass}">${c.nulo ? '—' : i + 1}</div>
+        <div>
+          <div class="rk-nome${c.nulo ? ' nulo-style' : ''}">${c.nome}</div>
+          <span class="rk-partido">${c.partido}</span>
+          <div class="rk-bar-mini">
+            <div class="rk-bar-mini-fill" data-pct="${pct}" style="background:${cor}"></div>
+          </div>
+        </div>
+        <div class="rk-right">
+          <div class="rk-pct-label">${pct}%</div>
+          <div class="rk-votos-label">${v} voto${v !== 1 ? 's' : ''}</div>
+        </div>
+      `;
+      content.appendChild(row);
+    });
+  });
+
+  // Anima as barras do ranking
+  setTimeout(() => {
+    document.querySelectorAll('.rk-bar-mini-fill').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  }, 300);
+}
+
+// ============================================================
+//  ADMIN — autenticação SHA-256
+//  Senha original: Atlanta
+//  Hash gerado via: sha256("Atlanta")
+// ============================================================
+const ADMIN_HASH = 'a6c2221569febb76282953aabf85f648511cbe327a8b20580e6029998184cdeb';
+
+// Bloqueio por tentativas
+const ADMIN_MAX_TENTATIVAS = 5;
+const ADMIN_BLOQUEIO_MS    = 60000; // 60 segundos
+let adminTentativas   = 0;
+let adminBloqueadoAte = 0;
+
+function abrirModal() {
+  document.getElementById('adminSenhaInput').value = '';
+  document.getElementById('modalErro').textContent = '';
+  document.getElementById('admin-login-screen').style.display = 'flex';
+  document.getElementById('admin-login-screen').style.flexDirection = 'column';
+  document.getElementById('admin-painel-screen').style.display = 'none';
+  document.getElementById('modalAdmin').classList.add('show');
+  setTimeout(() => document.getElementById('adminSenhaInput').focus(), 150);
+}
+
+function fecharModal() {
+  document.getElementById('modalAdmin').classList.remove('show');
+}
+
+async function confirmarSenha() {
+  const erroEl = document.getElementById('modalErro');
+  const input  = document.getElementById('adminSenhaInput');
+  const senha  = input.value;
+
+  // Verifica bloqueio ativo
+  const agora = Date.now();
+  if (agora < adminBloqueadoAte) {
+    const segsRestantes = Math.ceil((adminBloqueadoAte - agora) / 1000);
+    erroEl.textContent = '⛔ Bloqueado. Aguarde ' + segsRestantes + 's.';
+    return;
+  }
+
+  if (!senha) {
+    erroEl.textContent = '⚠ Digite a palavra-chave.';
+    return;
+  }
+
+  // Compara hash SHA-256 da senha digitada com o hash armazenado
+  const hashDigitado = await sha256(senha);
+  if (hashDigitado !== ADMIN_HASH) {
+    adminTentativas++;
+    input.value = '';
+    input.focus();
+    if (adminTentativas >= ADMIN_MAX_TENTATIVAS) {
+      adminBloqueadoAte = Date.now() + ADMIN_BLOQUEIO_MS;
+      adminTentativas   = 0;
+      erroEl.textContent = '⛔ Muitas tentativas. Bloqueado por 60s.';
+      iniciarContagemRegressiva(erroEl);
+    } else {
+      const restantes = ADMIN_MAX_TENTATIVAS - adminTentativas;
+      erroEl.textContent = '✗ Palavra-chave incorreta. ' + restantes + ' tentativa' + (restantes !== 1 ? 's' : '') + ' restante' + (restantes !== 1 ? 's' : '') + '.';
+    }
+    return;
+  }
+
+  // Senha correta — reseta contadores e exibe o painel
+  adminTentativas   = 0;
+  adminBloqueadoAte = 0;
+  document.getElementById('admin-login-screen').style.display = 'none';
+  document.getElementById('admin-painel-screen').style.display = 'flex';
+  preencherCamposTitulos();
+}
+
+function iniciarContagemRegressiva(erroEl) {
+  const interval = setInterval(() => {
+    const restante = Math.ceil((adminBloqueadoAte - Date.now()) / 1000);
+    if (restante <= 0) {
+      clearInterval(interval);
+      erroEl.textContent = '';
+      document.getElementById('adminSenhaInput').focus();
+    } else {
+      erroEl.textContent = '⛔ Bloqueado. Aguarde ' + restante + 's.';
+    }
+  }, 1000);
+}
+
+async function adminZerarVotos() {
+  const fb = document.getElementById('acao-feedback');
+  fb.textContent = 'Zerando...';
+  await zerarTodosVotos();
+  fb.textContent = '✓ Votos zerados com sucesso.';
+  renderPainel();
+  const btn = document.getElementById('btnIniciarVotacao');
+  if (btn) { btn.disabled = false; btn.textContent = '▶ INICIAR VOTAÇÃO'; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+  document.getElementById('jaVotouBanner').classList.remove('show');
+  setTimeout(() => { fb.textContent = ''; }, 3000);
+}
+
+
+// Tecla ESC fecha o painel admin
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') fecharModal();
+});
+
+// ============================================================
+//  INTEGRIDADE SHA-256
+// ============================================================
+async function renderIntegridade(allVotos) {
+  const listEl    = document.getElementById('integHashList');
+  const summaryEl = document.getElementById('integSummary');
+  listEl.innerHTML = '';
+
+  if (allVotos.length === 0) {
+    summaryEl.textContent = 'Nenhum voto registrado.';
+    return;
+  }
+
+  let okCount   = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < allVotos.length; i++) {
+    const v = allVotos[i];
+    const ok = await verificarVoto(v);
+    ok ? okCount++ : failCount++;
+
+    const ts = v.ts ? new Date(v.ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '—';
+    const hashExib = v._hash ? v._hash.substring(0, 24) + '…' : 'SEM HASH';
+
+    const row = document.createElement('div');
+    row.className = 'integ-row';
+    row.innerHTML = `
+      <div class="integ-num">#${String(i+1).padStart(3,'0')}</div>
+      <div class="integ-hash" title="${v._hash || ''}">${hashExib}</div>
+      <div class="integ-ts">${ts}</div>
+      <div class="${ok ? 'integ-ok' : 'integ-fail'}">${ok ? '✓ VÁLIDO' : '✗ INVÁLIDO'}</div>
+    `;
+    listEl.appendChild(row);
+  }
+
+  const totalIcon = failCount === 0 ? '🟢' : '🔴';
+  summaryEl.innerHTML = `${totalIcon} <strong>${allVotos.length}</strong> votos verificados — <span class="ok-count">${okCount} válidos</span>${failCount > 0 ? ` · <span class="fail-count">${failCount} INVÁLIDOS (possível adulteração)</span>` : ''}`;
+}
+
+function filterCargo(id, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.cargo-painel').forEach(p => {
+    p.style.display = (id === 'all' || p.dataset.cargo === id) ? 'block' : 'none';
+  });
+}
+
+// Auto-refresh painel a cada 5s se estiver visível
+setInterval(() => {
+  if (document.getElementById('page-painel').classList.contains('active')) {
+    renderPainel();
+  }
+}, 8000);
+
+// ============================================================
+//  ADMIN — funções de navegação de abas e campos
+// ============================================================
+function adminAba(id, btn) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('admin-aba-' + id).classList.add('active');
+  if (id === 'cargos') crudRenderCargoList();
+}
+
+function preencherCamposTitulos() {
+  document.getElementById('edit-htitle').value     = document.querySelector('.htitle')?.textContent || '';
+  document.getElementById('edit-hbadge').value     = document.querySelector('.hbadge')?.textContent || '';
+  document.getElementById('edit-welcome-h1').value  = document.querySelector('.welcome-h1')?.textContent.replace(/\n/g,' ') || '';
+  document.getElementById('edit-welcome-sub').value = document.querySelector('.welcome-sub')?.textContent || '';
+}
+
+function salvarTitulos() {
+  const htitle = document.getElementById('edit-htitle').value.trim();
+  const hbadge = document.getElementById('edit-hbadge').value.trim();
+  const wh1    = document.getElementById('edit-welcome-h1').value.trim();
+  const wsub   = document.getElementById('edit-welcome-sub').value.trim();
+  if (htitle) document.querySelector('.htitle').textContent  = htitle;
+  if (hbadge) document.querySelector('.hbadge').textContent  = hbadge;
+  if (wh1)    document.querySelector('.welcome-h1').textContent = wh1;
+  if (wsub)   document.querySelector('.welcome-sub').textContent = wsub;
+  const fb = document.getElementById('titulo-feedback');
+  fb.textContent = '✓ Títulos atualizados com sucesso.';
+  setTimeout(() => { fb.textContent = ''; }, 3000);
+}
+
+function restaurarTitulos() {
+  document.querySelector('.htitle').textContent   = 'Urna 2026 — AM';
+  document.querySelector('.hbadge').textContent   = 'Simulação';
+  document.querySelector('.welcome-h1').innerHTML = 'URNA SIMULADA<br>AMAZONAS 2026';
+  document.querySelector('.welcome-sub').textContent = 'Vote nos seus candidatos preferidos para cada cargo e veja o resultado em tempo real com todos os participantes.';
+  preencherCamposTitulos();
+  const fb = document.getElementById('acao-feedback');
+  fb.textContent = '✓ Títulos restaurados.';
+  setTimeout(() => { fb.textContent = ''; }, 3000);
+}
+
+function adminLiberarVoto() {
+  localStorage.removeItem('urna_am_2026_votou');
+  window._fbCache = null;
+  const btn = document.getElementById('btnIniciarVotacao');
+  if (btn) { btn.disabled = false; btn.textContent = '▶ INICIAR VOTAÇÃO'; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+  document.getElementById('jaVotouBanner').classList.remove('show');
+  const fb = document.getElementById('acao-feedback');
+  fb.textContent = '✓ Dispositivo liberado para novo voto.';
+  setTimeout(() => { fb.textContent = ''; }, 3000);
+}
+
+function exportarVotos() {
+  const db = getLocalDB();
+  const json = JSON.stringify(db.votos, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'votos_urna_am_2026.json';
+  a.click();
+}
+
+function adminSetTema(tema, btn) {
+  document.documentElement.setAttribute('data-tema', tema === 'escuro' ? '' : tema);
+  localStorage.setItem('urna_tema_2026', tema);
+  document.querySelectorAll('.admin-tema-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  ['escuro','azul','branco'].forEach(t => {
+    const el = document.getElementById('tema-check-' + t);
+    if (el) el.textContent = t === tema ? '✓' : '';
+  });
+  if (document.getElementById('page-painel').classList.contains('active')) renderPainel();
+}
+
+// ============================================================
+//  CRUD — Cargos & Candidatos
+// ============================================================
+function crudRenderCargoList() {
+  const list = document.getElementById('crudCargoList');
+  list.innerHTML = '';
+  CARGOS.forEach((cargo, ci) => {
+    const card = document.createElement('div');
+    card.className = 'crud-cargo-card';
+    card.id = 'crud-card-' + ci;
+    const nCands = cargo.candidatos.filter(c => !c.nulo).length;
+    card.innerHTML = `
+      <div class="crud-cargo-header" onclick="crudToggleCargo(${ci})">
+        <div class="crud-cargo-titulo">${cargo.titulo}</div>
+        <div class="crud-cargo-meta">${nCands} candidato${nCands!==1?'s':''} · ${cargo.vagas} vaga${cargo.vagas>1?'s':''}</div>
+        <div class="crud-cargo-chevron">›</div>
+      </div>
+      <div class="crud-cargo-body" id="crud-body-${ci}">
+        <div class="crud-cargo-fields">
+          <div class="admin-field">
+            <label class="admin-label">Título do cargo</label>
+            <input class="admin-input" id="cf-titulo-${ci}" value="${cargo.titulo.replace(/"/g,'&quot;')}" maxlength="60">
+          </div>
+          <div class="admin-field">
+            <label class="admin-label">Vagas</label>
+            <input class="admin-input" id="cf-vagas-${ci}" type="number" min="1" max="10" value="${cargo.vagas}" style="width:80px;">
+          </div>
+          <div class="admin-field full">
+            <label class="admin-label">Descrição</label>
+            <input class="admin-input" id="cf-desc-${ci}" value="${(cargo.desc||'').replace(/"/g,'&quot;')}" maxlength="100">
+          </div>
+        </div>
+        <div class="crud-divider">
+          <div class="crud-divider-line"></div>
+          <div class="crud-divider-txt">Candidatos</div>
+          <div class="crud-divider-line"></div>
+        </div>
+        <div class="crud-cand-list" id="crud-cands-${ci}"></div>
+        <div class="crud-novo-cand">
+          <div class="crud-novo-cand-title">// Novo candidato</div>
+          <div class="crud-novo-cand-fields">
+            <input class="admin-input" id="nc-nome-${ci}" placeholder="Nome completo" maxlength="60">
+            <input class="admin-input" id="nc-partido-${ci}" placeholder="Partido" maxlength="20">
+            <input class="admin-input" id="nc-perfil-${ci}" placeholder="Descrição (perfil)" maxlength="80">
+          </div>
+          <button class="crud-btn-add-cand" onclick="crudAdicionarCandidato(${ci})">＋ Adicionar candidato</button>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="crud-btn-salvar-cargo" onclick="crudSalvarCargo(${ci})">✓ SALVAR CARGO</button>
+          <button class="crud-btn-del-cargo" onclick="crudExcluirCargo(${ci})">🗑 EXCLUIR CARGO</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+    crudRenderCandidatos(ci);
+  });
+}
+
+function crudRenderCandidatos(ci) {
+  const cargo = CARGOS[ci];
+  const el = document.getElementById('crud-cands-' + ci);
+  if (!el) return;
+  el.innerHTML = '';
+  cargo.candidatos.forEach((c, idx) => {
+    const row = document.createElement('div');
+    row.className = 'crud-cand-row';
+    row.innerHTML = `
+      <div>
+        <div class="crud-cand-nome">${c.nome} ${c.nulo ? '<span class="crud-cand-tag-nulo">NULO/BRANCO</span>' : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+          <span class="crud-cand-partido">${c.partido}</span>
+          <span class="crud-cand-perfil">${c.perfil||''}</span>
+        </div>
+      </div>
+      <div class="crud-btn-mini-group">
+        ${!c.nulo ? `<button class="crud-btn-mini" onclick="crudEditarCandidato(${ci},${idx})">✏ Editar</button>` : ''}
+        <button class="crud-btn-mini del" onclick="crudRemoverCandidato(${ci},${idx})">✕</button>
+      </div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function crudToggleCargo(ci) {
+  document.getElementById('crud-card-' + ci).classList.toggle('open');
+}
+
+function crudSalvarCargo(ci) {
+  const titulo = document.getElementById('cf-titulo-' + ci)?.value.trim();
+  const desc   = document.getElementById('cf-desc-' + ci)?.value.trim();
+  const vagas  = parseInt(document.getElementById('cf-vagas-' + ci)?.value) || 1;
+  if (!titulo) return;
+  CARGOS[ci].titulo = titulo;
+  CARGOS[ci].desc   = desc;
+  CARGOS[ci].vagas  = vagas;
+  crudFeedback('✓ Cargo "' + titulo + '" salvo.');
+  crudRenderCargoList();
+  const card = document.getElementById('crud-card-' + ci);
+  if (card) card.classList.add('open');
+}
+
+function crudExcluirCargo(ci) {
+  if (!confirm('Excluir o cargo "' + CARGOS[ci].titulo + '"? Esta ação não pode ser desfeita.')) return;
+  CARGOS.splice(ci, 1);
+  crudFeedback('✓ Cargo excluído.');
+  crudRenderCargoList();
+}
+
+function crudAdicionarCandidato(ci) {
+  const nome    = document.getElementById('nc-nome-' + ci)?.value.trim();
+  const partido = document.getElementById('nc-partido-' + ci)?.value.trim();
+  const perfil  = document.getElementById('nc-perfil-' + ci)?.value.trim();
+  if (!nome || !partido) { crudFeedback('⚠ Preencha pelo menos nome e partido.', true); return; }
+  const id = 'cand_' + Date.now() + '_' + ci;
+  CARGOS[ci].candidatos.push({ id, nome, partido, perfil: perfil || '' });
+  document.getElementById('nc-nome-' + ci).value    = '';
+  document.getElementById('nc-partido-' + ci).value = '';
+  document.getElementById('nc-perfil-' + ci).value  = '';
+  crudRenderCandidatos(ci);
+  crudFeedback('✓ Candidato adicionado.');
+}
+
+function crudRemoverCandidato(ci, idx) {
+  if (!confirm('Remover "' + CARGOS[ci].candidatos[idx].nome + '"?')) return;
+  CARGOS[ci].candidatos.splice(idx, 1);
+  crudRenderCandidatos(ci);
+  crudFeedback('✓ Candidato removido.');
+}
+
+function crudEditarCandidato(ci, idx) {
+  const c = CARGOS[ci].candidatos[idx];
+  const overlay = document.createElement('div');
+  overlay.className = 'edit-cand-modal';
+  overlay.id = 'editCandModal';
+  overlay.innerHTML = `
+    <div class="edit-cand-box">
+      <div class="edit-cand-title">Editar Candidato</div>
+      <div class="admin-field">
+        <label class="admin-label">Nome completo</label>
+        <input class="admin-input" id="ec-nome" value="${c.nome.replace(/"/g,'&quot;')}" maxlength="60">
+      </div>
+      <div class="admin-field">
+        <label class="admin-label">Partido</label>
+        <input class="admin-input" id="ec-partido" value="${c.partido.replace(/"/g,'&quot;')}" maxlength="20">
+      </div>
+      <div class="admin-field">
+        <label class="admin-label">Descrição (perfil)</label>
+        <input class="admin-input" id="ec-perfil" value="${(c.perfil||'').replace(/"/g,'&quot;')}" maxlength="80">
+      </div>
+      <div class="edit-cand-btns">
+        <button class="edit-cand-cancel" onclick="document.getElementById('editCandModal').remove()">Cancelar</button>
+        <button class="edit-cand-save" onclick="crudSalvarEdicaoCand(${ci},${idx})">SALVAR</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function crudSalvarEdicaoCand(ci, idx) {
+  const nome    = document.getElementById('ec-nome')?.value.trim();
+  const partido = document.getElementById('ec-partido')?.value.trim();
+  const perfil  = document.getElementById('ec-perfil')?.value.trim();
+  if (!nome || !partido) return;
+  CARGOS[ci].candidatos[idx].nome    = nome;
+  CARGOS[ci].candidatos[idx].partido = partido;
+  CARGOS[ci].candidatos[idx].perfil  = perfil;
+  document.getElementById('editCandModal')?.remove();
+  crudRenderCandidatos(ci);
+  crudFeedback('✓ Candidato atualizado.');
+}
+
+function crudNovoCargo() {
+  const id    = 'cargo_' + Date.now();
+  const titulo = 'NOVO CARGO ' + (CARGOS.length + 1);
+  CARGOS.push({
+    id, titulo, desc: 'Descrição do cargo', vagas: 1,
+    candidatos: [
+      { id: 'branco_' + id, nome: 'Voto em Branco', partido: '—', perfil: 'Nenhum dos candidatos', nulo: true },
+      { id: 'nulo_'   + id, nome: 'Voto Nulo',      partido: '—', perfil: 'Anular o voto',         nulo: true },
+    ]
+  });
+  crudRenderCargoList();
+  const newIdx = CARGOS.length - 1;
+  const card = document.getElementById('crud-card-' + newIdx);
+  if (card) { card.classList.add('open'); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  crudFeedback('✓ Novo cargo criado. Preencha os dados e adicione candidatos.');
+}
+
+function crudFeedback(msg, erro) {
+  const fb = document.getElementById('cargos-feedback');
+  fb.style.color = erro ? 'var(--vermelho)' : 'var(--verde)';
+  fb.textContent = msg;
+  setTimeout(() => { fb.textContent = ''; }, 3500);
+}
+</script>
+
+<script>
+  // Registra o Service Worker para funcionamento offline (PWA)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('[SW] Registrado:', reg.scope))
+        .catch(err => console.warn('[SW] Falha:', err));
+    });
+  }
+
+  // Botão de instalação do app (A2HS)
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById('btnInstalarApp');
+    if (btn) btn.style.display = 'inline-flex';
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    const btn = document.getElementById('btnInstalarApp');
+    if (btn) btn.style.display = 'none';
+  });
+  function instalarApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  }
+</script>
+
+</body>
+</html>
