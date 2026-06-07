@@ -648,7 +648,11 @@ function marcarVotou(){localStorage.setItem('urna_am_2026_votou','1');}
 
 // ── INIT ──
 (async function initWelcome(){
-  if(USE_FIREBASE){await initFirebase();escutarFirebase();}
+  if(USE_FIREBASE){
+    await initFirebase();
+    // Escuta sem callback: apenas mantém _fbCache atualizado em background
+    escutarFirebase(null);
+  }
   if(jaVotou()){
     document.getElementById('jaVotouBanner').classList.add('show');
     const btn=document.getElementById('btnIniciarVotacao');
@@ -666,9 +670,16 @@ function showPage(id){
 
 function showPainel(){
   showPage('page-painel');
-  if(USE_FIREBASE&&!fbDB){
+  if(USE_FIREBASE&&fbDB&&window._fbCache){
+    // Firebase já conectado e cache disponível: renderiza imediatamente
+    renderPainel();
+    // Re-escuta para atualizações em tempo real
+    escutarFirebase(null);
+  }else if(USE_FIREBASE&&!fbDB){
+    // Firebase ainda não iniciou
     initFirebase().then(()=>escutarFirebase(renderPainel));
   }else if(USE_FIREBASE&&fbDB){
+    // Firebase conectado mas sem cache ainda: aguarda primeiro dado
     escutarFirebase(renderPainel);
   }else{
     renderPainel();
@@ -799,7 +810,9 @@ function renderConfirmResultados(meusVotos){
 }
 
 function renderPainel(){
-  const db=getDB();const allVotos=db.votos;const total=allVotos.length;
+  const db=(USE_FIREBASE&&window._fbCache)?window._fbCache:getLocalDB();
+  const allVotos=db.votos;const total=allVotos.length;
+  console.log('[renderPainel] votos:',total,'fonte:',(USE_FIREBASE&&window._fbCache)?'FIREBASE':'LOCAL');
   document.getElementById('totalVotos').textContent=total;
   document.getElementById('progressFill').style.width='100%';
   document.getElementById('stepLabel').innerHTML=`<span>${total}</span> votos`;
