@@ -308,6 +308,83 @@ header{position:sticky;top:0;z-index:300;background:var(--header-bg);backdrop-fi
 @media(max-width:700px){.cp-grafico-wrap{grid-template-columns:1fr}.cp-pizza{display:none}.barra-item{grid-template-columns:120px 1fr 66px;gap:8px}.bi-nome{font-size:13px}}
 @media(max-width:480px){.barra-item{grid-template-columns:100px 1fr 60px;gap:6px}.bi-nome{font-size:12px}.bi-pct{font-size:13px}.bi-votos-abs{font-size:9px}}
 @media(max-width:360px){.barra-item{grid-template-columns:80px 1fr 56px;gap:4px}.bi-nome{font-size:11px}}
+
+/* MARCA D'ÁGUA ALFA STORE */
+.alfa-watermark{
+  position:fixed;bottom:16px;right:18px;z-index:9000;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(8,12,16,0.5);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:999px;
+  padding:5px 14px 5px 8px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  text-decoration:none;
+  transition:all 0.25s;
+}
+.alfa-watermark:hover{
+  background:rgba(8,12,16,0.82);
+  border-color:rgba(255,255,255,0.15);
+  transform:translateY(-2px);
+  box-shadow:0 6px 24px rgba(0,0,0,0.35);
+}
+.alfa-wm-icon{width:20px;height:20px;flex-shrink:0;}
+.alfa-wm-txt{display:flex;flex-direction:column;gap:1px;}
+.alfa-wm-l1{
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;
+  letter-spacing:1.2px;color:rgba(160,190,210,0.55);
+  text-transform:uppercase;white-space:nowrap;
+}
+.alfa-wm-l2{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;
+  font-weight:600;letter-spacing:0.3px;
+  color:rgba(200,220,240,0.7);white-space:nowrap;
+}
+@media(max-width:480px){
+  .alfa-watermark{bottom:10px;right:10px;padding:4px 10px 4px 7px;}
+  .alfa-wm-l1{font-size:6.5px;}
+  .alfa-wm-l2{font-size:8px;}
+}
+
+/* RODAPÉ ALFA STORE */
+.alfa-footer {
+  width: 100%;
+  padding: 40px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: transparent;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  margin-top: 40px;
+}
+.alfa-footer-dev {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  color: rgba(160,185,210,0.45);
+  text-align: center;
+}
+.alfa-footer-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.alfa-footer-link:hover { opacity: 0.8; }
+.alfa-footer-wpp-icon {
+  width: 26px; height: 26px; flex-shrink: 0;
+}
+.alfa-footer-suporte {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: rgba(160,210,185,0.55);
+}
 </style>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0a84ff">
@@ -347,7 +424,7 @@ header{position:sticky;top:0;z-index:300;background:var(--header-bg);backdrop-fi
     <button class="btn-votar" id="btnIniciarVotacao" onclick="startVoting()">▶ INICIAR VOTAÇÃO</button>
     <button class="btn-ver-resultados" onclick="showPainel()">📊 VER RESULTADOS</button>
     <button id="btnInstalarApp" onclick="instalarApp()" style="display:none;margin-top:12px;background:none;border:1px solid var(--azul);color:var(--azul);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;padding:10px 24px;cursor:pointer;text-transform:uppercase;">📲 INSTALAR COMO APP</button>
-    <p class="disclaimer">Esta é uma simulação de pesquisa de campo. Os votos são armazenados no Firebase. Cada dispositivo registra apenas um voto. Sem identificação pessoal.</p>
+    <p class="disclaimer">Esta é uma simulação de pesquisa de campo. Cada dispositivo registra apenas um voto. Sem identificação pessoal.</p>
   </div>
 </div>
 
@@ -1156,5 +1233,22 @@ function instalarApp(){
   deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>deferredPrompt=null);
 }
 </script>
+
+
+
+
+<!-- RODAPÉ ALFA STORE -->
+<footer class="alfa-footer">
+  <div class="alfa-footer-dev">Desenvolvido por Alfa Store — Soluções e Tecnologia</div>
+  <a class="alfa-footer-link" href="https://wa.me/5592994810508" target="_blank" rel="noopener noreferrer">
+    <svg class="alfa-footer-wpp-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="16" r="15" fill="none" stroke="rgba(160,210,185,0.45)" stroke-width="1.5"/>
+      <path d="M22.5 9.4A9.1 9.1 0 0 0 7.1 20.5L6 26l5.6-1.1a9.1 9.1 0 0 0 10.9-15.5z" fill="rgba(160,210,185,0.45)"/>
+      <path d="M13.1 12.1c-.3-.6-.6-.6-.9-.6h-.7c-.2 0-.6.1-.9.5s-1.2 1.2-1.2 2.9 1.3 3.4 1.4 3.6 2.4 3.8 5.9 5.2c.8.3 1.4.5 1.9.6.8.3 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.4.2-1.5s-.2-.2-.5-.3-1.6-.8-1.9-.9-.4-.1-.6.1l-.9 1.1c-.1.2-.3.2-.5.1-.7-.3-1.4-.6-2-1.1-.5-.5-1-1-1.4-1.6-.1-.2 0-.4.1-.5l.6-.7c.1-.2.2-.4.3-.6s0-.4-.1-.5l-.9-2.4z" fill="rgba(240,255,248,0.7)"/>
+    </svg>
+    <span class="alfa-footer-suporte">Suporte — (92) 99481-0508</span>
+  </a>
+</footer>
+
 </body>
 </html>
