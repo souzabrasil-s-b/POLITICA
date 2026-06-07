@@ -5,7 +5,7 @@ Deploy automático no Firebase Hosting via GitHub Actions. Funciona como PWA (in
 
 ---
 
-## 📁 Estrutura do projeto
+## 📁 Estrutura do projeto  
 
 ```
 urna-am-2026/
