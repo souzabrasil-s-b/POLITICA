@@ -822,6 +822,12 @@ function renderPainel(){
   const db=(USE_FIREBASE&&window._fbCache)?window._fbCache:getLocalDB();
   const allVotos=Array.isArray(db.votos)?db.votos:[];
   const total=allVotos.length;
+  // Se Firebase ativo mas cache vazio: aguarda e tenta de novo
+  if(USE_FIREBASE&&total===0&&!window._fbCache){
+    document.getElementById('totGrid').innerHTML='<div style="color:var(--texto);font-family:IBM Plex Mono,monospace;font-size:11px;letter-spacing:1px;">⏳ Carregando dados do Firebase...</div>';
+    setTimeout(renderPainel,500);
+    return;
+  }
   document.getElementById('totalVotos').textContent=total;
   document.getElementById('progressFill').style.width='100%';
   document.getElementById('stepLabel').innerHTML=`<span>${total}</span> votos`;
@@ -1123,8 +1129,16 @@ function crudFeedback(msg,erro){
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
+    // Limpa todos os caches antigos do SW
+    if(window.caches){
+      caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
+    }
     navigator.serviceWorker.register('/sw.js')
-      .then(r=>console.log('[SW] Registrado:',r.scope))
+      .then(reg=>{
+        console.log('[SW] Registrado:',reg.scope);
+        // Força atualização imediata do SW
+        reg.update();
+      })
       .catch(e=>console.warn('[SW] Falha:',e));
   });
 }
