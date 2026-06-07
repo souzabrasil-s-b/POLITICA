@@ -841,7 +841,7 @@ function renderPainel(){
     <div class="tot-item"><div class="tot-num">${total}</div><div class="tot-label">Total de votos</div></div>
     <div class="tot-item"><div class="tot-num" style="color:var(--azul)">${CARGOS.length}</div><div class="tot-label">Cargos disputados</div></div>
     <div class="tot-item"><div class="tot-num" style="color:var(--amarelo)">${CARGOS.reduce((a,c)=>a+c.candidatos.filter(x=>!x.nulo).length,0)}</div><div class="tot-label">Candidatos</div></div>
-    <div class="tot-item"><div class="tot-num" style="color:var(--vermelho)">${Math.round(allVotos.filter(v=>Object.values(v).some(id=>id&&id.startsWith('nulo'))).length/Math.max(total,1)*100)}%</div><div class="tot-label">Taxa de nulos</div></div>`;
+    <div class="tot-item"><div class="tot-num" style="color:var(--vermelho)">${Math.round(allVotos.filter(v=>Object.values(v).some(id=>typeof id==='string'&&id.startsWith('nulo'))).length/Math.max(total,1)*100)}%</div><div class="tot-label">Taxa de nulos</div></div>`;
   document.getElementById('cargoFilter').innerHTML=`<button class="filter-btn active" onclick="filterCargo('all',this)">TODOS</button>`+CARGOS.map(c=>`<button class="filter-btn" onclick="filterCargo('${c.id}',this)">${c.titulo.split('—')[0].trim()}</button>`).join('');
   Object.values(charts).forEach(ch=>ch.destroy());charts={};
   const grid=document.getElementById('painelGrid');grid.innerHTML='';
