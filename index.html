@@ -2486,12 +2486,20 @@ function renderConfirmResultados(meusVotos) {
   }));
 }
 
-function resetVoting() {
-  // Não permite nova votação se já votou
-  if (jaVotou()) {
-    showPage('page-welcome');
-    return;
+function showPainel() {
+  showPage('page-painel');
+  if (USE_FIREBASE && !fbDB) {
+    initFirebase().then(() => {
+      escutarFirebase();
+      setTimeout(renderPainel, 1500);
+    });
+  } else if (USE_FIREBASE && fbDB) {
+    escutarFirebase();
+    setTimeout(renderPainel, 800);
+  } else {
+    renderPainel();
   }
+}
   votos = {};
   startVoting();
 }
