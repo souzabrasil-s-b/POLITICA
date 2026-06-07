@@ -8,7 +8,6 @@ const ASSETS = [
   '/icon-512.png',
 ];
 
-// Instalação: pré-cacheia os assets principais
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -16,7 +15,6 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Ativação: remove caches antigos
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -26,29 +24,30 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: serve do cache, tenta rede como fallback
+// Fetch: NETWORK FIRST — sempre busca da rede, cache só como fallback offline
 self.addEventListener('fetch', event => {
-  // Ignora requests não-GET e requests externos (Firebase, Google Fonts etc.)
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        // Cacheia responses bem-sucedidas de assets locais
+    fetch(event.request)
+      .then(response => {
+        // Atualiza o cache com a versão mais recente
         if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => {
-        // Offline e não está no cache: retorna index.html como fallback
-        if (event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('/index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        // Sem internet: usa o cache
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          if (event.request.headers.get('accept').includes('text/html')) {
+            return caches.match('/index.html');
+          }
+        });
+      })
   );
 });
